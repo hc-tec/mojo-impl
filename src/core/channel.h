@@ -5,10 +5,54 @@
 #ifndef MOJO_IMPL_CHANNEL_H
 #define MOJO_IMPL_CHANNEL_H
 
+#include "core/protocol.h"
+#include "core/ports/user_message.h"
 
-class channel {
+namespace tit {
 
+namespace mojo {
+
+// This class is responsible for send data and read data from underlying object
+// (e.g socket, shared memory). The data maybe need to transform format,
+// it will be serialized when sending data or be deserialized when reading data
+// completely.
+class Channel {
+ public:
+  class Delegate {
+   public:
+    virtual ~Delegate() = default;
+    virtual void OnChannelMessage(const Protocol::Ptr& protocol) = 0;
+    virtual void OnChannelError() = 0;
+  };
+
+  static Channel* Create(Delegate* delegate);
+
+  Channel(Delegate* delegate)
+      : delegate_(delegate),
+        closed_(false) {}
+
+  void Shutdown();
+
+  virtual ~Channel() {
+    Shutdown();
+  }
+
+  virtual void Start() = 0;
+
+  virtual void Read() = 0;
+
+  virtual void Write(const Protocol::Ptr& protocol) = 0;
+
+  virtual void ShutdownImpl() = 0;
+
+  Delegate* delegate_;
+  char closed_;
 };
+
+}  // namespace mojo
+
+}  // namespace tit
+
 
 
 #endif //MOJO_IMPL_CHANNEL_H
