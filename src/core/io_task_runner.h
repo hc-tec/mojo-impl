@@ -10,7 +10,7 @@
 namespace tit {
 namespace mojo {
 
-enum class IOEvent : uint8 {
+enum IOEvent : uint8 {
   kReadable = 1 << 0,
   kWritable = 1 << 1,
   kReadWritable = kReadable | kWritable,
@@ -25,11 +25,14 @@ class IOTaskRunner {
     virtual ~Delegate() = default;
     virtual void OnFdReadable(int fd) = 0;
     virtual void OnFdWriteable(int fd) = 0;
+    virtual void OnFdError(int fd) = 0;
   };
 
   ~IOTaskRunner() {
     delegate_ = nullptr;
   }
+
+  Delegate* delegate() const { return delegate_; }
 
   void set_delegate(Delegate* delegate) {
     delegate_ = delegate;
