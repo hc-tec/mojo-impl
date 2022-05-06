@@ -37,5 +37,9 @@ size_t HashInts64Impl(uint64_t value1, uint64_t value2) {
   return high_bits;
 }
 
+size_t HashInts64(uint64_t value1, uint64_t value2) {
+  return HashInts64Impl(value1, value2);
+}
+
 }  // namespace mojo
 }  // namespace tit

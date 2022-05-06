@@ -17,4 +17,3 @@ void Channel::Shutdown() {
 
 }  // namespace mojo
 }  // namespace tit
-

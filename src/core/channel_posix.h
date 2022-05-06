@@ -23,9 +23,10 @@ class ChannelPosix : public Channel,
  public:
 
   ChannelPosix(Channel::Delegate* delegate,
-               IOTaskRunner* io_task_runner)
+               IOTaskRunner* io_task_runner,
+               int fd)
       : Channel(delegate),
-        socket_(kInvalidSocket),
+        socket_(fd),
         io_task_runner_(io_task_runner) {
     io_task_runner_->set_delegate(this);
   }

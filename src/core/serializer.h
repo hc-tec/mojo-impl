@@ -16,6 +16,7 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+#include <memory>
 
 #include "core/byte_array.h"
 #include "core/protocol.h"
@@ -43,7 +44,7 @@ public:
         m_byteArray = std::make_shared<ByteArray>();
     }
 
-    Serializer(ByteArray::ptr byteArray) {
+    Serializer(ByteArray::Ptr byteArray) {
         m_byteArray = byteArray;
     }
 
@@ -77,7 +78,7 @@ public:
         return m_byteArray->toString();
     }
 
-    ByteArray::ptr getByteArray() {
+    ByteArray::Ptr getByteArray() {
         return m_byteArray;
     }
 
@@ -195,26 +196,26 @@ public:
         return *this;
     }
 
-    template<typename T>
-    Serializer &operator >> (std::list<T>& v){
-        size_t size;
-        read(size);
-        for (size_t i = 0; i < size; ++i) {
-            T t;
-            read(t);
-            v.template emplace_back(t);
-        }
-        return *this;
-    }
-
-    template<typename T>
-    Serializer &operator << (const std::list<T>& v){
-        write(v.size());
-        for(auto& t : v) {
-            (*this) << t;
-        }
-        return *this;
-    }
+//    template<typename T>
+//    Serializer &operator >> (std::list<T>& v){
+//        size_t size;
+//        read(size);
+//        for (size_t i = 0; i < size; ++i) {
+//            T t;
+//            read(t);
+//            v.template emplace_back(t);
+//        }
+//        return *this;
+//    }
+//
+//    template<typename T>
+//    Serializer &operator << (const std::list<T>& v){
+//        write(v.size());
+//        for(auto& t : v) {
+//            (*this) << t;
+//        }
+//        return *this;
+//    }
 
     template<typename T>
     Serializer &operator >> (std::vector<T>& v){
@@ -419,7 +420,7 @@ public:
     }
 
 private:
-    ByteArray::ptr m_byteArray;
+    ByteArray::Ptr m_byteArray;
 };
 
 }  // namespace mojo

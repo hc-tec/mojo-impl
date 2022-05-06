@@ -43,9 +43,9 @@ class ByteArray {
 
   template <class T>
   void writeFint(T value) {
-    if (m_endian != std::endian::native) {
-      value = ByteSwap(value);
-    }
+//    if (m_endian != std::endian::native) {
+//      value = ByteSwap(value);
+//    }
     write(&value, sizeof(value));
   }
 
@@ -232,8 +232,8 @@ class ByteArray {
   /// 当前数据的大小
   size_t m_size;
   /// 字节序,默认大端
-  // int8_t m_endian;
-  std::endian m_endian;
+//  // int8_t m_endian;
+//  std::endian m_endian;
   /// 第一个内存块指针
   Node *m_root;
   /// 当前操作的内存块指针

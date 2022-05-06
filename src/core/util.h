@@ -38,12 +38,13 @@ constexpr T ByteSwap(T value) {
 
 template<typename T>
 constexpr T EndianCast(T value) {
-    if constexpr(sizeof(T) == sizeof(uint8_t)
-                 || std::endian::native == std::endian::big){
-        return value;
-    } else if constexpr(std::endian::native == std::endian::little){
-        return ByteSwap(value);
-    }
+  return value;
+//    if constexpr(sizeof(T) == sizeof(uint8_t)
+//                 || std::endian::native == std::endian::big){
+//        return value;
+//    } else if constexpr(std::endian::native == std::endian::little){
+//        return ByteSwap(value);
+//    }
 }
 
 }  // namespace mojo

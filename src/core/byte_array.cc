@@ -9,7 +9,6 @@
 #include <iomanip>
 
 #include "log/logging.h"
-
 #include "core/byte_array.h"
 
 
@@ -40,7 +39,7 @@ ByteArray::ByteArray(size_t base_size)
         ,m_position(0)
         ,m_capacity(base_size)
         ,m_size(0)
-        ,m_endian(std::endian::big)
+//        ,m_endian(std::endian::big)
         ,m_root(new Node(base_size))
         ,m_cur(m_root) {
 }
@@ -55,15 +54,15 @@ ByteArray::~ByteArray() {
 }
 
 bool ByteArray::isLittleEndian() const {
-    return m_endian == std::endian::little;
+    return false; // m_endian == std::endian::little;
 }
 
 void ByteArray::setIsLittleEndian(bool val) {
-    if(val) {
-        m_endian = std::endian::little;
-    } else {
-        m_endian = std::endian::big;
-    }
+//    if(val) {
+//        m_endian = std::endian::little;
+//    } else {
+//        m_endian = std::endian::big;
+//    }
 }
 
 void ByteArray::writeFint8(int8_t value) {
@@ -205,11 +204,12 @@ uint8_t ByteArray::readFuint8() {
 #define XX(type)                            \
     type v;                                 \
     read(&v, sizeof(v));                    \
-    if(m_endian == std::endian::native) {   \
-        return v;                           \
-    } else {                                \
-        return ByteSwap(v);                 \
-    }
+    return v;
+//    if(m_endian == std::endian::native) {   \
+//        return v;                           \
+//    } else {                                \
+//        return ByteSwap(v);                 \
+//    }
 
 int16_t  ByteArray::readFint16() {
     XX(int16_t);

@@ -7,11 +7,11 @@
 
 #include <memory>
 #include <sstream>
+#include <string>
 
 #include "core/byte_array.h"
 
 namespace tit {
-
 namespace mojo {
 
 // private protocol for mojo ipc
@@ -106,6 +106,6 @@ class Protocol {
 };
 
 }  // namespace mojo
-
 }  // namespace tit
+
 #endif //MOJO_IMPL_PROTOCOL_H
