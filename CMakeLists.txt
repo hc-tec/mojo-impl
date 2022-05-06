@@ -11,13 +11,14 @@ add_compile_options(-Wall -O0 -std=c++20 -g -Wno-sign-compare -Wno-class-memacce
 
 include_directories(src)
 
-#include_directories("/usr/include/co")
-link_libraries(co)
+link_libraries(uv)
 
 add_subdirectory(src/core)
 add_subdirectory(test)
 
 link_directories(third_party)
+
+
 
 #link_directories(third_party)
 

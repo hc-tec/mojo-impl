@@ -1,70 +1,15 @@
-//
-// Created by titto on 2022/5/6.
-//
+#include <stdio.h>
+#include <stdlib.h>
+#include "uv.h"
 
+int main() {
+  uv_loop_t *loop = static_cast<uv_loop_t *>(malloc(sizeof(uv_loop_t)));
+  uv_loop_init(loop);
 
-#include "co/co.h"
-#include "co/log.h"
-#include "co/time.h"
+  printf("Now quitting.\n");
+  uv_run(loop, UV_RUN_DEFAULT);
 
-co::Event ev;
-co::Mutex mtx;
-co::Pool pool;
-
-int v = 0;
-int n = 0;
-
-void f1() {
-  ev.wait();
-  LOG << "f1()";
-  {
-    co::MutexGuard g(mtx);
-    ++v;
-  }
-
-  int* p = (int*) pool.pop();
-  if (!p) p = new int(atomic_inc(&n));
-  pool.push(p);
-}
-
-void f() {
-  co::sleep(32);
-  LOG << "s: " << co::scheduler_id() << " c: " << co::coroutine_id();
-}
-
-int main(int argc, char** argv) {
-  flag::init(argc, argv);
-  FLG_cout = true;
-
-  // print scheduler pointers
-  auto& s = co::schedulers();
-  for (size_t i = 0; i < s.size(); ++i) {
-    LOG << "i: " << (void*)s[i] << ", " << (void*)co::next_scheduler();
-  }
-
-  for (int i = 0; i < 8; ++i) go(f1);
-  go([&]() {
-    bool r = ev.wait(50);
-    LOG << "f2() r: " << r;
-  });
-
-  sleep::ms(100);
-  go([&]() {
-    LOG << "f3()";
-    ev.signal();
-  });
-
-  LOG << "co::Event wait in non-coroutine beg: " << now::ms();
-  ev.wait(200);
-  LOG << "co::Event wait in non-coroutine end: " << now::ms();
-  sleep::ms(200);
-
-  LOG << "v: " << v;
-  LOG << "n: " << n;
-
-  for (int i = 0; i < 32; ++i) go(f);
-
-  sleep::ms(100);
+  uv_loop_close(loop);
+  free(loop);
   return 0;
 }
-
