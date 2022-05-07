@@ -13,7 +13,7 @@ foreach(TEST_FILE ${ALL_TEST_FILES})
 
     link_directories(third_party)
 
-    target_link_libraries(${TEST_TARGET}_test PRIVATE core tit_base tit_log)
+    target_link_libraries(${TEST_TARGET}_test PRIVATE core tit_log tit_base)
 
     add_test(NAME ${TEST_TARGET}_test COMMAND ${TEST_TARGET}_test)
 endforeach(TEST_FILE ${ALL_TEST_FILES})
