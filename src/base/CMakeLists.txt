@@ -6,6 +6,7 @@ add_library(tit_base
         noncopyable.h
         atomic_int.h
         types.h
+        process.h
         )
 
 target_link_libraries(tit_base pthread rt)

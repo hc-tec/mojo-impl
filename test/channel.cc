@@ -1,5 +1,6 @@
 #pragma once
 
+#include "base/process.h"
 #include "core/libuv_io_task_runner_adapter.h"
 #include "core/channel_posix.h"
 #include "core/sock_ops.h"
@@ -8,7 +9,14 @@
 
 using namespace tit;
 
-int main() {
+int main(int argc, char* argv[]) {
+
+  base::Init(argc, argv);
+  std::string cmd_line = base::CurrentCommandLine();
+  base::ArgValueParser<int> int_parser;
+  int handler = int_parser("handler");
+  std::cout << handler << std::endl;
+
   int socket_pair[2];
   socketpair(AF_UNIX, SOCK_STREAM, 0, socket_pair);
   mojo::sock::set_nonblock(socket_pair[0]);
@@ -34,5 +42,6 @@ int main() {
   write_channel->Write(protocol);
 
   io_task_runner->Run();
+//  system();
   return 0;
 }
