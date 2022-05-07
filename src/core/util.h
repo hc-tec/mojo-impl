@@ -17,8 +17,6 @@
 #include <algorithm>
 #include <iostream>
 
-#include "log/logging.h"
-
 namespace tit {
 
 namespace mojo {
