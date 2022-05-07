@@ -8,6 +8,8 @@
 #include <uv.h>
 #include <cstdlib>
 
+#include <map>
+
 #include "core/io_task_runner.h"
 
 namespace tit {
@@ -48,6 +50,7 @@ class LibuvIOTaskRunnerAdapter : public IOTaskRunner {
 
  private:
   uv_loop_t* loop_;
+  std::map<int, uv_poll_t*> handles_map_;
   char close_;
 };
 

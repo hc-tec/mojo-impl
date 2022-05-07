@@ -4,69 +4,70 @@
 
 #include "libuv_io_task_runner_adapter.h"
 
-#include "log/logging.h"
+//#include "log/logging.h"
 
 namespace tit {
 namespace mojo {
 
-struct uv_handle_data {
-  LibuvIOTaskRunnerAdapter* adapter;
-  int fd;
-};
-
-using uv_handle_data_t = struct uv_handle_data;
-
 void LibuvIOTaskRunnerAdapter::OnLibuvFdActive(uv_poll_t* handle, int status, int events) {
-  uv_handle_data_t* data = static_cast<uv_handle_data_t*>(handle->data);
-  LibuvIOTaskRunnerAdapter* runner = data->adapter;
+  LibuvIOTaskRunnerAdapter* runner =
+      static_cast<LibuvIOTaskRunnerAdapter*>(handle->data);
   if (status < 0) {
-    LOG(INFO) << "libuv active error";
+//    LOG(INFO) << "libuv active error";
     return;
   }
-  if (events | uv_poll_event::UV_READABLE) {
-    runner->delegate()->OnFdReadable(data->fd);
-  } else if (events | uv_poll_event::UV_WRITABLE) {
-    runner->delegate()->OnFdWriteable(data->fd);
+  int fd = handle->u.fd;
+  if (events & UV_READABLE) {
+    runner->delegate(fd)->OnFdReadable(fd);
+  } else if (events & UV_WRITABLE) {
+    runner->delegate(fd)->OnFdWriteable(fd);
   }
 }
 
 void LibuvIOTaskRunnerAdapter::OnLibuvFdClose(uv_handle_t* handle) {
-  uv_handle_data_t* data = static_cast<uv_handle_data_t*>(handle->data);
-//  LibuvIOTaskRunnerAdapter* runner = data->adapter;
-  LOG(INFO) << "libuv handle close, fd: " << data->fd;
-  free(handle->data);
+  LibuvIOTaskRunnerAdapter* runner =
+      static_cast<LibuvIOTaskRunnerAdapter*>(handle->data);
+//  LOG(INFO) << "libuv handle close";
   free(handle);
+  int fd = handle->u.fd;
+  if (runner->handles_map_.find(fd) != runner->handles_map_.end()) {
+    runner->handles_map_.erase(fd);
+  }
 //  runner->Close();
 }
 
 void LibuvIOTaskRunnerAdapter::AddFdEvent(int fd, IOEvent event) {
-  uv_poll_t* handle_ =
-      static_cast<uv_poll_t*>(malloc(sizeof(uv_poll_t)));
-  uv_handle_data_t* data;
-  data->adapter = this;
-  data->fd = fd;
-  handle_->data = data;
-  handle_->close_cb = OnLibuvFdClose;
-  uv_poll_init(loop_, handle_, fd);
+  uv_poll_t* handle_ = nullptr;
+  if (handles_map_.find(fd) == handles_map_.end()) {
+    handle_ =
+        static_cast<uv_poll_t*>(malloc(sizeof(uv_poll_t)));
+    handle_->data = this;
+    handle_->close_cb = OnLibuvFdClose;
+    handle_->u.fd = fd;
+    uv_poll_init(loop_, handle_, fd);
+    handles_map_[fd] = handle_;
+  } else {
+    handle_ = handles_map_[fd];
+  }
+
   uv_poll_event uv_ev;
-  if (event | IOEvent::kReadable) {
-    uv_ev = uv_poll_event::UV_READABLE;
-  } else if (event | IOEvent::kWritable) {
-    uv_ev = uv_poll_event::UV_WRITABLE;
+  if (event & IOEvent::kReadable) {
+    uv_ev = UV_READABLE;
+  } else if (event & IOEvent::kWritable) {
+    uv_ev = UV_WRITABLE;
   }
   uv_poll_start(handle_, uv_ev, OnLibuvFdActive);
 }
 
 void LibuvIOTaskRunnerAdapter::DelFdEvent(int fd, IOEvent event) {
-  uv_poll_t* handle_ =
-      static_cast<uv_poll_t*>(malloc(sizeof(uv_poll_t)));
-  uv_handle_data_t* data;
-  data->adapter = this;
-  data->fd = fd;
-  handle_->data = data;
-  handle_->close_cb = OnLibuvFdClose;
-  uv_poll_init(loop_, handle_, fd);
-  uv_poll_event uv_ev = uv_poll_event::UV_DISCONNECT;
+  uv_poll_t* handle_ = nullptr;
+  if (handles_map_.find(fd) == handles_map_.end()) {
+    return;
+  } else {
+    handle_ = handles_map_[fd];
+  }
+
+  uv_poll_event uv_ev = UV_DISCONNECT;
   uv_poll_start(handle_, uv_ev, OnLibuvFdActive);
 }
 
