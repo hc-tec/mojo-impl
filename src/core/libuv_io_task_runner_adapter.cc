@@ -4,7 +4,7 @@
 
 #include "libuv_io_task_runner_adapter.h"
 
-//#include "log/logging.h"
+#include "log/logging.h"
 
 namespace tit {
 namespace mojo {
@@ -13,7 +13,7 @@ void LibuvIOTaskRunnerAdapter::OnLibuvFdActive(uv_poll_t* handle, int status, in
   LibuvIOTaskRunnerAdapter* runner =
       static_cast<LibuvIOTaskRunnerAdapter*>(handle->data);
   if (status < 0) {
-//    LOG(INFO) << "libuv active error";
+    LOG(INFO) << "libuv active error";
     return;
   }
   int fd = handle->u.fd;
@@ -27,7 +27,7 @@ void LibuvIOTaskRunnerAdapter::OnLibuvFdActive(uv_poll_t* handle, int status, in
 void LibuvIOTaskRunnerAdapter::OnLibuvFdClose(uv_handle_t* handle) {
   LibuvIOTaskRunnerAdapter* runner =
       static_cast<LibuvIOTaskRunnerAdapter*>(handle->data);
-//  LOG(INFO) << "libuv handle close";
+  LOG(INFO) << "libuv handle close";
   free(handle);
   int fd = handle->u.fd;
   if (runner->handles_map_.find(fd) != runner->handles_map_.end()) {

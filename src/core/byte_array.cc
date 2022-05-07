@@ -8,7 +8,7 @@
 #include <sstream>
 #include <iomanip>
 
-//#include "log/logging.h"
+#include "log/logging.h"
 #include "core/byte_array.h"
 
 
@@ -447,8 +447,8 @@ bool ByteArray::writeToFile(const std::string& name) const {
     std::ofstream ofs;
     ofs.open(name, std::ios::trunc | std::ios::binary);
     if(!ofs) {
-//        LOG(ERROR) << "writeToFile name=" << name
-//                                  << " error , errno=" << errno << " errstr=" << strerror(errno);
+        LOG(ERROR) << "writeToFile name=" << name
+                                  << " error , errno=" << errno << " errstr=" << strerror(errno);
         return false;
     }
 
@@ -472,8 +472,8 @@ bool ByteArray::readFromFile(const std::string& name) {
     std::ifstream ifs;
     ifs.open(name, std::ios::binary);
     if(!ifs) {
-//      LOG(ERROR) << "readFromFile name=" << name
-//                                  << " error, errno=" << errno << " errstr=" << strerror(errno);
+      LOG(ERROR) << "readFromFile name=" << name
+                                  << " error, errno=" << errno << " errstr=" << strerror(errno);
         return false;
     }
 

@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
+#include "log/logging.h"
 #include "base/process.h"
 #include "core/libuv_io_task_runner_adapter.h"
 #include "core/channel_posix.h"
@@ -16,14 +17,35 @@
 
 using namespace tit;
 
+void AddParentPrefix(
+    log::LogStream& stream,
+    const log::LogMessageInfo& l,
+    void* data) {
+  stream << "[parent] " << l.level_
+         << "20220406-18:30:30"
+         << ' ' << PlatformThread::CurrentId()
+         << ' ' << l.fullname_ << ':' << l.line_ << ' ';
+}
+
+void AddChildPrefix(
+    log::LogStream& stream,
+    const log::LogMessageInfo& l,
+    void* data) {
+  stream << "[Child ] " << l.level_
+         << "20220406-18:30:30"
+         << ' ' << PlatformThread::CurrentId()
+         << ' ' << l.filename_ << ':' << l.line_ << ' ';
+}
+
 int main(int argc, char* argv[]) {
   base::Init(argc, argv);
+  log::InitTitLogging(argv[0], AddParentPrefix, nullptr);
   std::string cmd_line = base::CurrentCommandLine();
   base::ArgValueParser<int> int_parser;
   int handler = int_parser("handler");
   if (handler != (int) INTMAX_MAX) {
-
-    std::cout << "Born from parent" << std::endl;
+    log::InitTitLogging(argv[0], AddChildPrefix, nullptr);
+    LOG(INFO) << "Born from parent";
     mojo::LibuvIOTaskRunnerAdapter* io_task_runner =
         new mojo::LibuvIOTaskRunnerAdapter();
 
@@ -64,12 +86,11 @@ int main(int argc, char* argv[]) {
     char* argument_list[] = {
         const_cast<char*>(base::CurrentExecuteName().data()),
         const_cast<char*>(argument.data()), NULL};
-    std::cout << cmd_line.data() << std::endl << argument_list[0]
-              << std::endl
-              << argument_list[1];
+    LOG(INFO) << "command line" << cmd_line.data();
+    LOG(INFO) << "channel: " << socket_pair[0];
     int r = execvp(argument_list[0], argument_list);
     if (r == -1) {
-      std::cout << "execvp error";
+      LOG(INFO) << "execvp error";
     }
     _exit(127);
   }

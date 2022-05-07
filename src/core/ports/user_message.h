@@ -59,7 +59,7 @@ class UserMessage : public ProtocolInterface {
   std::string ToString() {
     std::stringstream ss;
     ss << "[ port_name_: " << "v1=" << port_name_.v1
-       << " v2=" << port_name_.v2 << "\ndata=" << data_
+       << " v2=" << port_name_.v2 << " data=" << data_
        << "]";
     return ss.str();
   }

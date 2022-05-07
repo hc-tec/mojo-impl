@@ -55,15 +55,18 @@ class Logging {
 struct LogMessageInfo {
 
   explicit LogMessageInfo(const char* const level,
+                          const char* const fullname,
                           const char* const filename,
                           const int& line,
                           const int& thread_id)
       : level_(level),
+        fullname_(fullname),
         filename_(filename),
         line_(line),
         thread_id_(thread_id) {}
 
   const char* const level_;
+  const char* const fullname_;
   const char* const filename_;
   const int &line_;
   const int &thread_id_;

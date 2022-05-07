@@ -2,11 +2,11 @@
 // Created by titto on 2022/5/6.
 //
 
-//#include "log/logging.h"
-#include <iostream>
+
 #include "core/channel_posix.h"
 #include "core/sock_ops.h"
 #include "core/serializer.h"
+#include "log/logging.h"
 
 namespace tit {
 namespace mojo {
@@ -31,10 +31,10 @@ void ChannelPosix::ShutdownImpl() {
 void ChannelPosix::OnFdReadable(int fd) {
   io_task_runner_->AddFdEvent(socket_, IOEvent::kWritable);
   Protocol::Ptr protocol = ReadHeader(Protocol::kBaseLen);
-  std::cout << protocol->ToString() << std::endl;
+  LOG(DEBUG) << protocol->ToString();
   ports::UserMessage::Ptr user_msg =
       ReadBody(protocol, protocol->content_length());
-  std::cout << user_msg->ToString() << std::endl;
+  LOG(DEBUG) << user_msg->ToString();
 }
 
 void ChannelPosix::OnFdWriteable(int fd) {
@@ -43,8 +43,8 @@ void ChannelPosix::OnFdWriteable(int fd) {
     writing_protocol_.pop();
     std::string data = Channel::Serialize(protocol);
     sock::Send(socket_, data.data(), data.size());
-    std::cout << "send data: " << data
-              << " size: " << data.size() << std::endl;
+    LOG(DEBUG) << "send data: " << data
+              << " size: " << data.size();
   }
   io_task_runner_->AddFdEvent(socket_, IOEvent::kReadable);
 }
@@ -64,7 +64,7 @@ Protocol::Ptr ChannelPosix::ReadHeader(int header_length) const {
 ports::UserMessage::Ptr ChannelPosix::ReadBody(const Protocol::Ptr& protocol,
                             int content_length) {
   std::string buf = ReadFixBufFromSocket(content_length);
-  std::cout << "Recv body: " << buf << std::endl;
+  LOG(DEBUG) << "Recv body: " << buf;
   protocol->set_content(buf);
   return Channel::DeserializeMessage(buf);
 }
