@@ -13,6 +13,8 @@ namespace base {
 class Process;
 
 extern Process* g_process;
+extern std::string g_dir;
+extern std::string g_execute_file;
 
 class Process {
  public:
@@ -36,6 +38,8 @@ void Init(int argc, char* argv[]);
 Process* CurrentProcess();
 
 std::string CurrentCommandLine();
+std::string CurrentDirectory();
+std::string CurrentExecuteName();
 
 std::string _ArgValueParser(const std::string& arg);
 
