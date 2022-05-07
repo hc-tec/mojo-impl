@@ -45,6 +45,21 @@ class Channel {
 
   virtual void ShutdownImpl() = 0;
 
+ public:
+
+  static std::string Serialize(const Protocol::Ptr& protocol);
+
+  static std::string SerializeProtocol(const Protocol::Ptr& protocol);
+
+  static std::string SerializeMessage(const ports::UserMessage::Ptr& message);
+
+  static Protocol::Ptr DeserializeProtocol(const std::string& raw_data);
+
+  static ports::UserMessage::Ptr
+  DeserializeMessage(const std::string& raw_data);
+
+ private:
+
   Delegate* delegate_;
   char closed_;
 };
