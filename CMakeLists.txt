@@ -6,7 +6,7 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
 
-add_compile_options(-Wall -O0 -std=c++17 -g -Wno-sign-compare -Wno-class-memaccess -Wno-strict-aliasing)
+add_compile_options(-Wall -O0 -std=c++11 -g -Wno-sign-compare -Wno-class-memaccess -Wno-strict-aliasing)
 
 link_libraries(uv)
 
