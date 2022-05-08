@@ -34,7 +34,7 @@ void AddChildPrefix(
   stream << "[Child ] " << l.level_
          << "20220406-18:30:30"
          << ' ' << PlatformThread::CurrentId()
-         << ' ' << l.filename_ << ':' << l.line_ << ' ';
+         << ' ' << l.fullname_ << ':' << l.line_ << ' ';
 }
 
 int main(int argc, char* argv[]) {
@@ -77,23 +77,14 @@ int main(int argc, char* argv[]) {
       new mojo::ChannelPosix(nullptr, io_task_runner, socket_pair[1]);
   read_channel->Start();
 
-  pid_t pid = fork();
+  std::string argument("-handler=");
+  argument.append(std::to_string(socket_pair[0]));
+  char* argument_list[] = {
+      const_cast<char*>(base::CurrentExecuteName().data()),
+      const_cast<char*>(argument.data()), NULL};
 
-  if (pid == 0) {
-    setenv("PATH", base::CurrentDirectory().data(), 1);
-    std::string argument("-handler=");
-    argument.append(std::to_string(socket_pair[0]));
-    char* argument_list[] = {
-        const_cast<char*>(base::CurrentExecuteName().data()),
-        const_cast<char*>(argument.data()), NULL};
-    LOG(INFO) << "command line" << cmd_line.data();
-    LOG(INFO) << "channel: " << socket_pair[0];
-    int r = execvp(argument_list[0], argument_list);
-    if (r == -1) {
-      LOG(INFO) << "execvp error";
-    }
-    _exit(127);
-  }
+  Process* child_process = base::Process::LaunchProcess(argument_list);
+  delete child_process;
 
   mojo::ports::PortName port_name(123, 456);
   std::string data("send from reader");
