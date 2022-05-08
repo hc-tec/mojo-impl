@@ -35,7 +35,10 @@ void ChannelPosix::OnFdReadable(int fd) {
   LOG(DEBUG) << protocol->ToString();
   ports::UserMessage::Ptr user_msg =
       ReadBody(protocol, protocol->content_length());
-  LOG(DEBUG) << user_msg->ToString();
+  if (user_msg != nullptr) {
+    protocol->set_next_layer(user_msg);
+    LOG(DEBUG) << user_msg->ToString();
+  }
   if (delegate_) delegate_->OnChannelMessage(protocol);
 }
 

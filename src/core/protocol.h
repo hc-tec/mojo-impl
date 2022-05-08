@@ -15,12 +15,16 @@ namespace tit {
 namespace mojo {
 
 class ProtocolInterface {
+ public:
+  using Ptr = std::shared_ptr<ProtocolInterface>;
   // Encode object into ByteArray, then it can transform to string
   // used to transfer in network
   virtual ByteArray::Ptr Encode() = 0;
   // Decode the ByteArray into Protocol,
   // then we can use the decoded data received
   virtual void Decode(const ByteArray::Ptr& bt) = 0;
+
+  virtual Ptr next_layer() = 0;
 };
 
 // private protocol for mojo ipc
@@ -68,6 +72,13 @@ class Protocol : public ProtocolInterface {
   void set_msg_type(MsgType type) { type_ = static_cast<uint8_t>(type); }
   void set_content_length(uint32_t len) { content_length_ = len; }
   void set_content(const std::string& content) { data_ = content; }
+  void set_next_layer(const ProtocolInterface::Ptr& next_layer) {
+    next_layer_ = next_layer;
+  }
+
+  ProtocolInterface::Ptr next_layer() override {
+    return next_layer_;
+  }
 
   ByteArray::Ptr EncodeMeta() {
     ByteArray::Ptr bt = std::make_shared<ByteArray>();
@@ -121,6 +132,8 @@ class Protocol : public ProtocolInterface {
   uint8_t type_ { static_cast<uint8_t>(MsgType::kNormal) };
   uint32_t content_length_ { 0 };
   std::string data_;
+  ProtocolInterface::Ptr next_layer_;
+
 };
 
 }  // namespace mojo

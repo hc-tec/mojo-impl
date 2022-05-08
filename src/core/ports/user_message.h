@@ -6,12 +6,20 @@
 #define MOJO_IMPL_USER_MESSAGE_H
 
 #include "core/protocol.h"
+
 #include "core/byte_array.h"
 #include "core/ports/name.h"
 
 namespace tit {
 namespace mojo {
 namespace ports {
+
+enum class MsgType : uint8 {
+  kAcceptInvitee,
+  kAcceptInvitation,
+  kEventMessage,
+  kAcceptPeer,
+};
 
 class UserMessage : public ProtocolInterface {
  public:
@@ -30,6 +38,10 @@ class UserMessage : public ProtocolInterface {
 
   PortName port_name() const { return port_name_; }
   std::string data() const { return data_; }
+  MsgType msg_type() const { return static_cast<MsgType>(msg_type_); }
+  ProtocolInterface::Ptr next_layer() override {
+    return nullptr;
+  }
 
   void set_port_name(const PortName& port_name) {
     port_name_ = port_name;
@@ -37,6 +49,10 @@ class UserMessage : public ProtocolInterface {
 
   void set_data(const std::string& data) {
     data_ = data;
+  }
+
+  void set_msg_type(uint8 msg_type) {
+    msg_type_ = msg_type;
   }
 
   ByteArray::Ptr Encode() override {
@@ -66,6 +82,7 @@ class UserMessage : public ProtocolInterface {
 
  private:
   PortName port_name_ { kInvalidPortName };
+  uint8 msg_type_;
   std::string data_;
 };
 
