@@ -5,7 +5,11 @@
 #ifndef TIT_LOGGING_PROCESS_H
 #define TIT_LOGGING_PROCESS_H
 
+#include <unistd.h>
+
 #include <string>
+
+#include "log/logging.h"
 
 namespace tit {
 namespace base {
@@ -15,6 +19,16 @@ class Process;
 extern Process* g_process;
 extern std::string g_dir;
 extern std::string g_execute_file;
+
+void Init(int argc, char* argv[]);
+
+Process* CurrentProcess();
+
+std::string CurrentCommandLine();
+std::string CurrentDirectory();
+std::string CurrentExecuteName();
+
+std::string _ArgValueParser(const std::string& arg);
 
 class Process {
  public:
@@ -27,21 +41,32 @@ class Process {
     }
   }
 
-  std::string command_lien() { return command_line_; }
+  static Process* LaunchProcess(char* argument_list[]) {
+    pid_t pid = fork();
+
+    if (pid == 0) {
+      setenv("PATH", CurrentDirectory().data(), 1);
+//      std::string argument("-handler=");
+//      argument.append(std::to_string(socket_pair[0]));
+//      char* argument_list[] = {
+//          const_cast<char*>(base::CurrentExecuteName().data()),
+//          const_cast<char*>(argument.data()), NULL};
+//      LOG(INFO) << "command line" << cmd_line.data();
+//      LOG(INFO) << "channel: " << socket_pair[0];
+      int r = execvp(argument_list[0], argument_list);
+      if (r == -1) {
+        LOG(INFO) << "execvp error";
+      }
+      _exit(127);
+    }
+    return new Process();
+  }
+
+  std::string command_line() { return command_line_; }
 
  private:
   std::string command_line_;
 };
-
-void Init(int argc, char* argv[]);
-
-Process* CurrentProcess();
-
-std::string CurrentCommandLine();
-std::string CurrentDirectory();
-std::string CurrentExecuteName();
-
-std::string _ArgValueParser(const std::string& arg);
 
 template<typename T>
 struct ArgValueParser {
