@@ -6,6 +6,7 @@
 #define MOJO_IMPL_TYPES_H
 
 typedef uint64_t MojoHandle;
+const MojoHandle MOJO_HANDLE_INVALID = 0;
 
 
 typedef uint32_t MojoResult;
