@@ -15,6 +15,8 @@
 namespace tit {
 namespace mojo {
 
+
+
 class NodeChannel : public Channel::Delegate {
  public:
   class Delegate {
@@ -22,6 +24,8 @@ class NodeChannel : public Channel::Delegate {
     virtual ~Delegate() = default;
     virtual void OnAcceptInvitee() = 0;
     virtual void OnAcceptInvitation() = 0;
+    virtual void OnChannelError(const ports::NodeName& name,
+                                NodeChannel* channel) = 0;
   };
 
   NodeChannel(Delegate* delegate,
@@ -39,6 +43,9 @@ class NodeChannel : public Channel::Delegate {
   // Channel::Delegate
   void OnChannelMessage(const Protocol::Ptr& protocol) override;
   void OnChannelError() override;
+
+ private:
+  void WriteChannelMessage(const Protocol::Ptr& message);
 
  private:
   Delegate* delegate_;
