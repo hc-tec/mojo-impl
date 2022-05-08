@@ -6,10 +6,11 @@
 #define MOJO_IMPL_CHANNEL_H
 
 #include "core/protocol.h"
+#include "core/connection_params.h"
+#include "core/io_task_runner.h"
 #include "core/ports/user_message.h"
 
 namespace tit {
-
 namespace mojo {
 
 // This class is responsible for send data and read data from underlying object
@@ -25,10 +26,15 @@ class Channel {
     virtual void OnChannelError() = 0;
   };
 
-  static Channel* Create(Delegate* delegate);
+  static Channel* Create(Delegate* delegate,
+                         ConnectionParams connection_params,
+                         IOTaskRunner* io_task_runner);
 
-  Channel(Delegate* delegate)
+  Channel(Delegate* delegate,
+          ConnectionParams connection_params,
+          IOTaskRunner* io_task_runner)
       : delegate_(delegate),
+        io_task_runner_(io_task_runner),
         closed_(false) {}
 
   void Shutdown();
@@ -58,14 +64,15 @@ class Channel {
   static ports::UserMessage::Ptr
   DeserializeMessage(const std::string& raw_data);
 
- private:
-
+ protected:
   Delegate* delegate_;
+  IOTaskRunner* io_task_runner_;
+
+ private:
   char closed_;
 };
 
 }  // namespace mojo
-
 }  // namespace tit
 
 

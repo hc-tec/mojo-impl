@@ -4,6 +4,7 @@
 
 
 #include "core/channel_posix.h"
+
 #include "core/sock_ops.h"
 #include "core/serializer.h"
 #include "log/logging.h"
@@ -35,6 +36,7 @@ void ChannelPosix::OnFdReadable(int fd) {
   ports::UserMessage::Ptr user_msg =
       ReadBody(protocol, protocol->content_length());
   LOG(DEBUG) << user_msg->ToString();
+  if (delegate_) delegate_->OnChannelMessage(protocol);
 }
 
 void ChannelPosix::OnFdWriteable(int fd) {
@@ -69,6 +71,13 @@ ports::UserMessage::Ptr ChannelPosix::ReadBody(const Protocol::Ptr& protocol,
   return Channel::DeserializeMessage(buf);
 }
 
+Channel* Channel::Create(Channel::Delegate* delegate,
+                ConnectionParams connection_params,
+                IOTaskRunner* io_task_runner) {
+  return new ChannelPosix(delegate,
+                          connection_params,
+                          io_task_runner);
+}
 
 }  // namespace mojo
 }  // namespace tit

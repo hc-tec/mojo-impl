@@ -9,6 +9,7 @@
 #include "core/channel_posix.h"
 #include "core/sock_ops.h"
 #include "core/protocol.h"
+#include "core/connection_params.h"
 #include "core/ports/user_message.h"
 
 #include <iostream>
@@ -48,9 +49,9 @@ int main(int argc, char* argv[]) {
     LOG(INFO) << "Born from parent";
     mojo::LibuvIOTaskRunnerAdapter* io_task_runner =
         new mojo::LibuvIOTaskRunnerAdapter();
-
+    mojo::ConnectionParams params(handler);
     mojo::ChannelPosix* write_channel =
-        new mojo::ChannelPosix(nullptr, io_task_runner, handler);
+        new mojo::ChannelPosix(nullptr, params, io_task_runner);
     write_channel->Start();
     mojo::ports::PortName port_name(123, 456);
     std::string data("hello world");
@@ -73,8 +74,12 @@ int main(int argc, char* argv[]) {
   mojo::LibuvIOTaskRunnerAdapter* io_task_runner =
       new mojo::LibuvIOTaskRunnerAdapter();
 
+  mojo::ConnectionParams params(socket_pair[1]);
+
   mojo::ChannelPosix* read_channel =
-      new mojo::ChannelPosix(nullptr, io_task_runner, socket_pair[1]);
+      new mojo::ChannelPosix(nullptr,
+                             params,
+                             io_task_runner);
   read_channel->Start();
 
   std::string argument("-handler=");

@@ -5,12 +5,14 @@
 #ifndef MOJO_IMPL_CHANNEL_POSIX_H
 #define MOJO_IMPL_CHANNEL_POSIX_H
 
+#include "core/channel.h"
+
 #include <sys/socket.h>
 #include <queue>
 #include <deque>
 
 #include "base/mutex.h"
-#include "core/channel.h"
+#include "core/connection_params.h"
 #include "core/io_task_runner.h"
 
 namespace tit {
@@ -23,11 +25,12 @@ class ChannelPosix : public Channel,
  public:
 
   ChannelPosix(Channel::Delegate* delegate,
-               IOTaskRunner* io_task_runner,
-               int fd)
-      : Channel(delegate),
-        socket_(fd),
-        io_task_runner_(io_task_runner) {
+               ConnectionParams connection_params,
+               IOTaskRunner* io_task_runner)
+      : Channel(delegate,
+                connection_params,
+                io_task_runner),
+        socket_(connection_params.fd()) {
     io_task_runner_->set_delegate(this);
   }
 
@@ -56,7 +59,6 @@ class ChannelPosix : public Channel,
 
  private:
   int socket_;
-  IOTaskRunner* io_task_runner_;
 //  base::MutexLock lock_;
   std::deque<int> incoming_fds_;
   std::queue<Protocol::Ptr> writing_protocol_;
