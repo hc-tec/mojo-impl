@@ -7,6 +7,9 @@ add_library(tit_base
         atomic_int.h
         types.h
         process.h
+        eintr_warpper.h
+        rand_util.h
+        def.h
         )
 
 target_link_libraries(tit_base pthread rt)
