@@ -5,7 +5,7 @@
 #ifndef MOJO_IMPL_HASH_H
 #define MOJO_IMPL_HASH_H
 
-#include "core/def.h"
+#include "base/def.h"
 
 namespace tit {
 namespace mojo {
