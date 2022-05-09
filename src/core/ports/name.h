@@ -10,6 +10,7 @@
 #include <tuple>
 
 #include "core/hash.h"
+#include "log/log_stream.h"
 
 namespace tit {
 namespace mojo {
@@ -44,6 +45,10 @@ struct NodeName : Name {
 
 extern const PortName kInvalidPortName;
 extern const NodeName kInvalidNodeName;
+
+log::LogStream& operator<<(log::LogStream& steam, PortName port_name) {
+  steam << port_name.v1 << '-' << port_name.v2;
+}
 
 }  // namespace ports
 }  // namespace mojo

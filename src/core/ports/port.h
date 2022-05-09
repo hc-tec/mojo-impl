@@ -5,15 +5,15 @@
 #ifndef MOJO_IMPL_PORT_H
 #define MOJO_IMPL_PORT_H
 
-#include <queue>
-#include <memory>
 #include <map>
+#include <memory>
+#include <queue>
 
+#include "base/def.h"
 #include "base/mutex.h"
-#include "core/def.h"
-#include "core/ports/name.h"
 #include "core/ports/event.h"
 #include "core/ports/message_queue.h"
+#include "core/ports/name.h"
 
 namespace tit {
 namespace mojo {

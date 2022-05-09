@@ -7,7 +7,7 @@
 
 #include <memory>
 
-#include "core/def.h"
+#include "base/def.h"
 #include "core/ports/name.h"
 #include "core/protocol.h"
 
@@ -49,9 +49,11 @@ class Event {
 
   Type type() const { return type_; }
 
+  const PortName& port_name() const { return port_name_; }
   const PortName& from_port() const { return from_port_; }
-  void set_from_port(const PortName& from_port) { from_port_ = from_port; }
 
+  void set_port_name(const PortName& port_name) { port_name_ = port_name; }
+  void set_from_port(const PortName& from_port) { from_port_ = from_port; }
  private:
   Type type_;
   PortName port_name_;

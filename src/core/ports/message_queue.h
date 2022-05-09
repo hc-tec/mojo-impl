@@ -8,8 +8,8 @@
 #include <limits>
 #include <vector>
 
+#include "base/def.h"
 #include "base/noncopyable.h"
-#include "core/def.h"
 #include "core/ports/event.h"
 
 namespace tit {

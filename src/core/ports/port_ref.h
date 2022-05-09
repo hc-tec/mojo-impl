@@ -27,11 +27,11 @@ class PortRef {
   PortRef& operator=(PortRef&& other) = default;
 
   const PortName& name() const { return name_; }
+  Port::Ptr port() const { return port_; }
 
   bool is_valid() const { return !!port_; }
 
  private:
-  Port* port() const { return port_.get(); }
 
   PortName name_;
   Port::Ptr port_;
