@@ -14,6 +14,19 @@
 namespace tit {
 namespace mojo {
 
+enum class MsgType : uint8 {
+  kHeaderType,
+
+  kAcceptInvitee,
+  kAcceptInvitation,
+  kEventMessage,
+  kRequestPortMerge,
+  kRequestIntroduction,
+  kIntroduction,
+  kBroadcastEvent,
+  kAcceptPeer,
+};
+
 class ProtocolInterface {
  public:
   using Ptr = std::shared_ptr<ProtocolInterface>;
@@ -25,6 +38,8 @@ class ProtocolInterface {
   virtual void Decode(const ByteArray::Ptr& bt) = 0;
 
   virtual Ptr next_layer() = 0;
+
+  virtual MsgType type() = 0;
 };
 
 // private protocol for mojo ipc
@@ -37,18 +52,22 @@ class Protocol : public ProtocolInterface {
  public:
   using Ptr = std::shared_ptr<Protocol>;
 
-  static constexpr uint8_t kMagic = 0xcc;
-  static constexpr uint8_t kDefaultVersion = 0x01;
+  Protocol() = default;
+
+  Protocol(Protocol* pProtocol) {}
+
+  template <class T>
+  static Protocol::Ptr TransToProtocolPtr() {
+    return std::make_shared<Protocol>(
+        reinterpret_cast<Protocol*>(
+            new T));
+  }
+
+  static constexpr uint8 kMagic = 0xcc;
+  static constexpr uint8 kDefaultVersion = 0x01;
   // 7: header size
   // 4: used to represent data length
-  static constexpr uint8_t kBaseLen = 7 + 4;
-
-  enum class MsgType : uint8_t {
-    kNormal,
-    kUpgradeOffer,
-    kUpgradeAccept,
-    kUpgradeReject
-  };
+  static constexpr uint8 kBaseLen = 7 + 4;
 
   static Protocol::Ptr Create() {
     return std::make_shared<Protocol>();
@@ -61,24 +80,17 @@ class Protocol : public ProtocolInterface {
     return proto;
   }
 
-  uint8_t magic() const { return magic_; }
-  uint8_t version() const { return version_; }
+  uint8 magic() const { return magic_; }
+  uint8 version() const { return version_; }
   MsgType msg_type() const { return static_cast<MsgType>(type_); }
   uint32_t content_length() const { return content_length_; }
   const std::string& content() const { return data_; }
 
-  void set_magic(uint8_t magic) { magic_ = magic; }
-  void set_version(uint8_t version) { version_ = version; }
-  void set_msg_type(MsgType type) { type_ = static_cast<uint8_t>(type); }
+  void set_magic(uint8 magic) { magic_ = magic; }
+  void set_version(uint8 version) { version_ = version; }
+  void set_msg_type(MsgType type) { type_ = static_cast<uint8>(type); }
   void set_content_length(uint32_t len) { content_length_ = len; }
   void set_content(const std::string& content) { data_ = content; }
-  void set_next_layer(const ProtocolInterface::Ptr& next_layer) {
-    next_layer_ = next_layer;
-  }
-
-  ProtocolInterface::Ptr next_layer() override {
-    return next_layer_;
-  }
 
   ByteArray::Ptr EncodeMeta() {
     ByteArray::Ptr bt = std::make_shared<ByteArray>();
@@ -90,6 +102,7 @@ class Protocol : public ProtocolInterface {
     return bt;
   }
 
+  // ProtocolInterface
   ByteArray::Ptr Encode() override {
     ByteArray::Ptr bt = std::make_shared<ByteArray>();
     bt->writeFuint8(magic_);
@@ -100,21 +113,28 @@ class Protocol : public ProtocolInterface {
     bt->setPosition(0);
     return bt;
   }
-
   void DecodeMeta(const ByteArray::Ptr& bt) {
     magic_ = bt->readFuint8();
     version_ = bt->readFuint8();
     type_ = bt->readFuint8();
     content_length_ = bt->readFuint32();
   }
-
   void Decode(const ByteArray::Ptr& bt) override {
-    magic_ = bt->readFuint8();
-    version_ = bt->readFuint8();
-    type_ = bt->readFuint8();
-    content_length_ = bt->readFuint32();
-    data_ = bt->readStringF32();
+    DecodeMeta(bt);
+//    magic_ = bt->readFuint8();
+//    version_ = bt->readFuint8();
+//    type_ = bt->readFuint8();
+//    content_length_ = bt->readFuint32();
+//    data_ = bt->readStringF32();
 //    content_length_ = data_.size();
+  }
+  MsgType type() override { return MsgType::kHeaderType; }
+  void set_next_layer(const ProtocolInterface::Ptr& next_layer) {
+    next_layer_ = next_layer;
+  }
+
+  ProtocolInterface::Ptr next_layer() override {
+    return next_layer_;
   }
 
   std::string ToString() {
@@ -127,9 +147,9 @@ class Protocol : public ProtocolInterface {
 
  private:
   // We called following variables Header except for the data_ field.
-  uint8_t magic_ { kMagic };
-  uint8_t version_ { kDefaultVersion };
-  uint8_t type_ { static_cast<uint8_t>(MsgType::kNormal) };
+  uint8 magic_ { kMagic };
+  uint8 version_ { kDefaultVersion };
+  uint8 type_ { static_cast<uint8>(MsgType::kEventMessage) };
   uint32_t content_length_ { 0 };
   std::string data_;
   ProtocolInterface::Ptr next_layer_;
