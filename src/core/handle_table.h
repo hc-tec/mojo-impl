@@ -9,11 +9,11 @@
 #include <unordered_map>
 #include <utility>
 
+#include "base/def.h"
 #include "base/mutex.h"
 #include "base/noncopyable.h"
-#include "core/def.h"
-#include "core/types.h"
 #include "core/dispatcher.h"
+#include "core/types.h"
 
 namespace tit {
 namespace mojo {

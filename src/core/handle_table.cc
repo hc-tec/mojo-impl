@@ -10,6 +10,7 @@ namespace tit {
 namespace mojo {
 
 MojoHandle HandleTable::AddDispatcher(const Dispatcher::Ptr& dispatcher) {
+  base::MutexLockGuard g(lock_);
   if (next_available_handle_ == MOJO_HANDLE_INVALID)
     return MOJO_HANDLE_INVALID;
   MojoHandle handle = next_available_handle_++;
@@ -22,6 +23,7 @@ MojoHandle HandleTable::AddDispatcher(const Dispatcher::Ptr& dispatcher) {
 }
 
 Dispatcher::Ptr HandleTable::GetDispatcher(MojoHandle handle) {
+  base::MutexLockGuard g(lock_);
   auto it = handles_.find(handle);
   if (it == handles_.end()) {
     return nullptr;

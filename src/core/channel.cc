@@ -16,15 +16,15 @@ void Channel::Shutdown() {
   closed_ = true;
 }
 
-std::string Channel::SerializeProtocol(const Protocol::Ptr& protocol) {
+std::string Channel::SerializeProtocol(const ProtocolInterface::Ptr& protocol) {
   return protocol->Encode()->toString();
 }
 
-std::string Channel::SerializeMessage(const ports::UserMessage::Ptr& message) {
+std::string Channel::SerializeMessage(const ProtocolInterface::Ptr& message) {
   return message->Encode()->toString();
 }
 
-std::string Channel::Serialize(const Protocol::Ptr& protocol) {
+std::string Channel::Serialize(const ProtocolInterface::Ptr& protocol) {
   return SerializeProtocol(protocol);
 }
 
@@ -34,19 +34,18 @@ Protocol::Ptr Channel::DeserializeProtocol(const std::string& raw_data) {
   s.reset();
   s.offset(1);
   Protocol::Ptr protocol = Protocol::Create();
-  protocol->DecodeMeta(s.getByteArray());
+  protocol->Decode(s.getByteArray());
   return protocol;
 }
 
-ports::UserMessage::Ptr Channel::DeserializeMessage(
-    const std::string& raw_data) {
+void Channel::DeserializeMessage(Protocol::Ptr& message,
+                                          const std::string& raw_data) {
   Serializer s;
   s << raw_data;
   s.reset();
   s.offset(1);
-  ports::UserMessage::Ptr message = ports::UserMessage::Create();
+
   message->Decode(s.getByteArray());
-  return message;
 }
 
 }  // namespace mojo

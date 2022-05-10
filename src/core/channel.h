@@ -5,10 +5,10 @@
 #ifndef MOJO_IMPL_CHANNEL_H
 #define MOJO_IMPL_CHANNEL_H
 
-#include "core/protocol.h"
 #include "core/connection_params.h"
 #include "core/io_task_runner.h"
-#include "core/ports/user_message.h"
+#include "core/protocol.h"
+#include "core/protocols/user_message.h"
 
 namespace tit {
 namespace mojo {
@@ -53,16 +53,16 @@ class Channel {
 
  public:
 
-  static std::string Serialize(const Protocol::Ptr& protocol);
+  static std::string Serialize(const ProtocolInterface::Ptr& protocol);
 
-  static std::string SerializeProtocol(const Protocol::Ptr& protocol);
+  static std::string SerializeProtocol(const ProtocolInterface::Ptr& protocol);
 
-  static std::string SerializeMessage(const ports::UserMessage::Ptr& message);
+  static std::string SerializeMessage(const ProtocolInterface::Ptr& message);
 
   static Protocol::Ptr DeserializeProtocol(const std::string& raw_data);
 
-  static ports::UserMessage::Ptr
-  DeserializeMessage(const std::string& raw_data);
+  static void DeserializeMessage(Protocol::Ptr& message,
+                                          const std::string& raw_data);
 
  protected:
   Delegate* delegate_;

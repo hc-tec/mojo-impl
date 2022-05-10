@@ -54,8 +54,7 @@ class ChannelPosix : public Channel,
 
   Protocol::Ptr ReadHeader(int header_length) const;
 
-  ports::UserMessage::Ptr ReadBody(const Protocol::Ptr& protocol,
-                       int content_length);
+  std::string ReadBody(int content_length);
 
  private:
   int socket_;

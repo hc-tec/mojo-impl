@@ -6,7 +6,9 @@
 #include "core/channel_posix.h"
 
 #include "core/sock_ops.h"
-#include "core/serializer.h"
+
+#include "core/protocols/user_message.h"
+
 #include "log/logging.h"
 
 namespace tit {
@@ -33,13 +35,9 @@ void ChannelPosix::OnFdReadable(int fd) {
   io_task_runner_->AddFdEvent(socket_, IOEvent::kWritable);
   Protocol::Ptr protocol = ReadHeader(Protocol::kBaseLen);
   LOG(DEBUG) << protocol->ToString();
-  ports::UserMessage::Ptr user_msg =
-      ReadBody(protocol, protocol->content_length());
-  if (user_msg != nullptr) {
-    protocol->set_next_layer(user_msg);
-    LOG(DEBUG) << user_msg->ToString();
-  }
-  if (delegate_) delegate_->OnChannelMessage(protocol);
+  std::string body = ReadBody(protocol->content_length());
+  protocol->set_content(body);
+  delegate_->OnChannelMessage(protocol);
 }
 
 void ChannelPosix::OnFdWriteable(int fd) {
@@ -62,16 +60,14 @@ std::string ChannelPosix::ReadFixBufFromSocket(uint16 fix_len) const {
 }
 
 Protocol::Ptr ChannelPosix::ReadHeader(int header_length) const {
-  std::string buf = ReadFixBufFromSocket(header_length);
+  std::string&& buf = ReadFixBufFromSocket(header_length);
   return Channel::DeserializeProtocol(buf);
 }
 
-ports::UserMessage::Ptr ChannelPosix::ReadBody(const Protocol::Ptr& protocol,
-                            int content_length) {
-  std::string buf = ReadFixBufFromSocket(content_length);
+std::string ChannelPosix::ReadBody(int content_length) {
+  std::string&& buf = ReadFixBufFromSocket(content_length);
   LOG(DEBUG) << "Recv body: " << buf;
-  protocol->set_content(buf);
-  return Channel::DeserializeMessage(buf);
+  return std::move(buf);
 }
 
 Channel* Channel::Create(Channel::Delegate* delegate,
