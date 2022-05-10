@@ -1,20 +1,20 @@
 #pragma once
 
-#include <unistd.h>
 #include <stdlib.h>
-
-#include "log/logging.h"
-#include "base/process.h"
-#include "core/libuv_io_task_runner_adapter.h"
-#include "core/channel_posix.h"
-#include "core/sock_ops.h"
-#include "core/protocol.h"
-#include "core/connection_params.h"
-#include "core/ports/user_message.h"
+#include <unistd.h>
 
 #include <iostream>
 #include <vector>
 
+#include "base/process.h"
+#include "core/channel_posix.h"
+#include "core/connection_params.h"
+#include "core/libuv_io_task_runner_adapter.h"
+#include "core/protocol.h"
+#include "core/protocols/user_message.h"
+#include "core/sock_ops.h"
+#include "core/node_channel.h"
+#include "log/logging.h"
 
 using namespace tit;
 
@@ -43,6 +43,7 @@ int main(int argc, char* argv[]) {
   log::InitTitLogging(argv[0], AddParentPrefix, nullptr);
   std::string cmd_line = base::CurrentCommandLine();
   base::ArgValueParser<int> int_parser;
+
   int handler = int_parser("handler");
   if (handler != (int) INTMAX_MAX) {
     log::InitTitLogging(argv[0], AddChildPrefix, nullptr);
@@ -50,18 +51,20 @@ int main(int argc, char* argv[]) {
     mojo::LibuvIOTaskRunnerAdapter* io_task_runner =
         new mojo::LibuvIOTaskRunnerAdapter();
     mojo::ConnectionParams params(handler);
-    mojo::ChannelPosix* write_channel =
-        new mojo::ChannelPosix(nullptr, params, io_task_runner);
+    mojo::NodeChannel::Ptr write_channel = mojo::NodeChannel::Create(
+        nullptr,
+        params,
+        io_task_runner);
     write_channel->Start();
     mojo::ports::PortName port_name(123, 456);
     std::string data("hello world");
-    mojo::ports::UserMessage::Ptr message =
-        mojo::ports::UserMessage::Create(port_name, data);
+    mojo::UserMessage::Ptr message =
+        mojo::UserMessage::Create(port_name, data);
     mojo::Protocol::Ptr protocol =
         mojo::Protocol::Create(
-            mojo::Protocol::MsgType::kNormal,
+            mojo::MsgType::kEventMessage,
             message->Encode()->toString());
-    write_channel->Write(protocol);
+    write_channel->WriteChannelMessage(protocol);
     io_task_runner->Run();
     return 0;
   }
@@ -76,11 +79,12 @@ int main(int argc, char* argv[]) {
 
   mojo::ConnectionParams params(socket_pair[1]);
 
-  mojo::ChannelPosix* read_channel =
-      new mojo::ChannelPosix(nullptr,
-                             params,
-                             io_task_runner);
-  read_channel->Start();
+  mojo::NodeChannel::Ptr node_channel = mojo::NodeChannel::Create(
+      nullptr,
+      params,
+      io_task_runner);
+
+  node_channel->Start();
 
   std::string argument("-handler=");
   argument.append(std::to_string(socket_pair[0]));
@@ -93,13 +97,13 @@ int main(int argc, char* argv[]) {
 
   mojo::ports::PortName port_name(123, 456);
   std::string data("send from reader");
-  mojo::ports::UserMessage::Ptr message =
-      mojo::ports::UserMessage::Create(port_name, data);
+  mojo::UserMessage::Ptr message =
+      mojo::UserMessage::Create(port_name, data);
   mojo::Protocol::Ptr protocol =
       mojo::Protocol::Create(
-          mojo::Protocol::MsgType::kNormal,
+          mojo::MsgType::kEventMessage,
           message->Encode()->toString());
-  read_channel->Write(protocol);
+  node_channel->WriteChannelMessage(protocol);
 
   io_task_runner->Run();
 
