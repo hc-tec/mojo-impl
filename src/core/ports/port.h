@@ -57,7 +57,7 @@ class Port {
   void TakePendingMessage(std::vector<UserMessageEvent::Ptr>* messages);
 
   DISALLOW_COPY_AND_ASSIGN(Port);
- private:
+
   ~Port() = default;
  private:
   using NodePortPair = std::pair<NodeName, PortName>;

@@ -68,6 +68,10 @@ class Node {
   int SendUserMessage(const PortRef& port_ref,
                       const UserMessageEvent::Ptr& message);
 
+  int ClosePort(const PortRef& port_ref);
+
+  void ErasePort(const PortName& port_name);
+
   DISALLOW_COPY_AND_ASSIGN(Node);
  private:
   class DelegateHolder {

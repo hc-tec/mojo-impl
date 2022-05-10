@@ -140,6 +140,26 @@ int Node::CreatePortPair(PortRef* port0_ref, PortRef* port1_ref) {
   return OK;
 }
 
+int Node::ClosePort(const PortRef& port_ref) {
+  std::vector<UserMessageEvent::Ptr> messages;
+  auto port = port_ref.port();
+  port->TakePendingMessage(&messages);
+  ErasePort(port_ref.name());
+}
+
+void Node::ErasePort(const PortName& port_name) {
+  ports::Port::Ptr port;
+  {
+    base::MutexLockGuard g(ports_lock_);
+    auto it = ports_.find(port_name);
+    if (it == ports_.end())
+      return;
+    port = std::move(it->second);
+    ports_.erase(it);
+  }
+  LOG(DEBUG) << "Deleted port " << port_name << "@" << name_;
+}
+
 }  // namespace ports
 
 }  // namespace mojo
