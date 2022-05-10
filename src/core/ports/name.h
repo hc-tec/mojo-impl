@@ -46,9 +46,9 @@ struct NodeName : Name {
 extern const PortName kInvalidPortName;
 extern const NodeName kInvalidNodeName;
 
-log::LogStream& operator<<(log::LogStream& steam, PortName port_name) {
-  steam << port_name.v1 << '-' << port_name.v2;
-}
+log::LogStream& operator<<(log::LogStream& stream, Name name);
+
+std::ostream& operator<<(std::ostream& stream, Name name);
 
 }  // namespace ports
 }  // namespace mojo
