@@ -4,7 +4,7 @@
 
 #include "core/channel.h"
 
-#include "serializer.h"
+
 
 namespace tit {
 namespace mojo {
@@ -38,15 +38,17 @@ Protocol::Ptr Channel::DeserializeProtocol(const std::string& raw_data) {
   return protocol;
 }
 
-void Channel::DeserializeMessage(Protocol::Ptr& message,
-                                          const std::string& raw_data) {
-  Serializer s;
-  s << raw_data;
-  s.reset();
-  s.offset(1);
+//void Channel::DeserializeMessage(ProtocolInterface::Ptr& message,
+//                                          const std::string& raw_data) {
+//  Serializer s;
+//  s << raw_data;
+//  s.reset();
+//  s.offset(1);
+//
+//  message->Decode(s.getByteArray());
+//}
 
-  message->Decode(s.getByteArray());
-}
+
 
 }  // namespace mojo
 }  // namespace tit

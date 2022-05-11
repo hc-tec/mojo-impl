@@ -57,5 +57,7 @@ MojoResult InvitationDispatcher::ExtractMessagePipe(
   return MOJO_RESULT_OK;
 }
 
+MojoResult InvitationDispatcher::Close() { return 0; }
+
 }  // namespace mojo
 }  // namespace tit

@@ -9,6 +9,7 @@
 #include "core/io_task_runner.h"
 #include "core/protocol.h"
 #include "core/protocols/user_message.h"
+#include "core/serializer.h"
 
 namespace tit {
 namespace mojo {
@@ -61,8 +62,15 @@ class Channel {
 
   static Protocol::Ptr DeserializeProtocol(const std::string& raw_data);
 
-  static void DeserializeMessage(Protocol::Ptr& message,
-                                          const std::string& raw_data);
+  template <class T>
+  static void DeserializeMessage(T& message,
+                                   const std::string& raw_data) {
+    Serializer s;
+    s << raw_data;
+    s.reset();
+    s.offset(1);
+    message->Decode(s.getByteArray());
+  }
 
  protected:
   Delegate* delegate_;

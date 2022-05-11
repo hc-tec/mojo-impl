@@ -22,5 +22,7 @@ MessagePipeDispatcher::Ptr MessagePipeDispatcher::Create(
       node_controller, port);
 }
 
+MojoResult MessagePipeDispatcher::Close() { return 0; }
+
 }  // namespace mojo
 }  // namespace tit
