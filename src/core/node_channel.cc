@@ -58,6 +58,7 @@ void NodeChannel::OnChannelMessage(const Protocol::Ptr& protocol) {
 
   switch (protocol->msg_type()) {
     case MsgType::kAcceptInvitation: {
+      LOG(TRACE) << "Msg: Accept Invitation";
       AcceptInvitationProtocol::Ptr data = AcceptInvitationProtocol::Create();
       Channel::DeserializeMessage(data, protocol->content());
       delegate_->OnAcceptInvitation(remote_node_name_, data->token_,
@@ -65,6 +66,7 @@ void NodeChannel::OnChannelMessage(const Protocol::Ptr& protocol) {
       return;
     }
     case MsgType::kAcceptInvitee: {
+      LOG(TRACE) << "Msg: Accept Invitee";
       AcceptInviteeProtocol::Ptr data = AcceptInviteeProtocol::Create();
       Channel::DeserializeMessage(data, protocol->content());
       delegate_->OnAcceptInvitee(remote_node_name_, data->inviter_name_,
@@ -72,6 +74,7 @@ void NodeChannel::OnChannelMessage(const Protocol::Ptr& protocol) {
       return;
     }
     case MsgType::kRequestPortMerge: {
+      LOG(TRACE) << "Msg: Request Port Merge";
       RequestPortMergeProtocol::Ptr data = RequestPortMergeProtocol::Create();
       Channel::DeserializeMessage(data, protocol->content());
 //      delegate_->OnRequestPortMerge(remote_node_name_,
