@@ -86,6 +86,9 @@ class NodeController : public NodeChannel::Delegate,
                     const ports::PortName& port_name) override;
 
  private:
+  void HandlePendingMergePort();
+
+ private:
   using NodeMap = std::unordered_map<ports::NodeName,
                                      NodeChannel::Ptr>;
 

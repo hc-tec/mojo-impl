@@ -31,7 +31,15 @@ void NodeController::SetIOTaskRunner(IOTaskRunner* io_task_runner) {
 
 void NodeController::MergePortIntoInviter(const std::string& name,
                                           const ports::PortRef& port) {
-  NodeChannel::Ptr inviter = GetInviterChannel();
+  NodeChannel::Ptr inviter;
+  {
+    base::MutexLockGuard g(pending_port_merges_lock_);
+    inviter = GetInviterChannel();
+    if (!inviter) {
+      pending_port_merges_.emplace_back(name, port);
+      return;
+    }
+  }
   inviter->RequestPortMerge(port.name(), name);
 }
 
@@ -165,7 +173,8 @@ void NodeController::OnRequestPortMerge(
   ports::PortName local_port_name;
   node_->MergePorts(&local_port_name, local_port,
                     from_node, connector_port_name);
-  GetInviterChannel()->ResponsePortMerge(connector_port_name, local_port_name);
+  GetPeerChannel(from_node)->ResponsePortMerge(connector_port_name,
+                                               local_port_name);
 }
 
 void NodeController::OnAddClient(const ports::NodeName& from_node,
@@ -191,6 +200,9 @@ void NodeController::OnAcceptInvitee(const ports::NodeName& from_node,
 
   inviter_channel_->SetRemoteNodeName(inviter_name);
   inviter_channel_->AcceptInvitation(token, name_);
+  AddPeer(inviter_name, inviter_channel_,
+          false /* start_channel */);
+  HandlePendingMergePort();
 }
 
 void NodeController::OnAcceptInvitation(const ports::NodeName& from_node,
@@ -221,6 +233,7 @@ void NodeController::OnAcceptInvitation(const ports::NodeName& from_node,
   NodeChannel::Ptr channel = it->second;
   pending_invitations_.erase(it);
   AddPeer(invitee_name, channel, false);
+
 }
 
 void NodeController::OnChannelError(const ports::NodeName& name,
@@ -239,6 +252,23 @@ void NodeController::OnResponsePortMerge(
     const ports::PortName& connector_port_name,
     const ports::PortName& port_name) {
   node_->MergePortsResponse(connector_port_name,from_node, port_name);
+}
+
+void NodeController::HandlePendingMergePort() {
+
+  // Complete any port merge requests we have waiting for the inviter.
+  std::vector<std::pair<std::string, ports::PortRef>> pending_port_merges;
+  {
+    base::MutexLockGuard g(pending_port_merges_lock_);
+    std::swap(pending_port_merges_, pending_port_merges);
+  }
+  std::vector<ports::PortName> pending_port_names;
+  for (auto& request : pending_port_merges) {
+    LOG(TRACE) << "Handle request port merge. message pipe name: "
+               << request.first;
+    GetInviterChannel()->RequestPortMerge(request.second.name(), request.first);
+  }
+
 }
 
 }  // namespace mojo
