@@ -9,6 +9,7 @@
 #include <unordered_map>
 
 #include "base/mutex.h"
+#include "base/rand_util.h"
 #include "core/ports/name.h"
 #include "core/ports/port.h"
 #include "core/ports/port_ref.h"
@@ -16,6 +17,11 @@
 namespace tit {
 namespace mojo {
 namespace ports {
+
+template <typename T>
+void GenerateRandomName(T* out) {
+  base::RandBytes(out, sizeof(T));
+}
 
 enum : int8 {
   OK = 0,

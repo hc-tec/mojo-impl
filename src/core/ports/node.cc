@@ -5,7 +5,6 @@
 #include "node.h"
 
 #include "base/mutex.h"
-#include "base/rand_util.h"
 #include "base/noncopyable.h"
 
 namespace tit {
