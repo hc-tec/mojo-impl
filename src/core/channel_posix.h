@@ -60,6 +60,8 @@ class ChannelPosix : public Channel,
   int socket_;
 //  base::MutexLock lock_;
   std::deque<int> incoming_fds_;
+
+  base::MutexLock writing_protocol_lock_;
   std::queue<Protocol::Ptr> writing_protocol_;
 };
 

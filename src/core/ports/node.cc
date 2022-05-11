@@ -180,8 +180,11 @@ int Node::MergePorts(
     }
     local_port = it->second;
   }
+  peer_port_maps_[local_port->peer_node_name].erase(port_ref.name());
   UpdatePortPeerAddress(*local_port_name, local_port,
                         destination_node_name, destination_port_name);
+  LOG(TRACE) << "local_name" << *local_port_name
+             << "local_peer_name" << local_port->peer_port_name;
   return OK;
 }
 
@@ -204,6 +207,8 @@ int Node::MergePortsResponse(const PortName& local_peer_port_name,
                                       [local_port_name];
   PortName dummy;
   MergePorts(&dummy, local_port, destination_node_name, destination_port_name);
+  LOG(TRACE) << "local_name" << local_port.name()
+             << "local_peer_name" << local_peer_port_name;
   return 0;
 }
 

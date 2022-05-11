@@ -24,7 +24,10 @@ void ChannelPosix::Read() {
 
 void ChannelPosix::Write(const Protocol::Ptr& protocol) {
   io_task_runner_->AddFdEvent(socket_, IOEvent::kWritable);
-  writing_protocol_.push(protocol);
+  {
+    base::MutexLockGuard g(writing_protocol_lock_);
+    writing_protocol_.push(protocol);
+  }
 }
 
 void ChannelPosix::ShutdownImpl() {
@@ -32,7 +35,7 @@ void ChannelPosix::ShutdownImpl() {
 }
 
 void ChannelPosix::OnFdReadable(int fd) {
-  io_task_runner_->AddFdEvent(socket_, IOEvent::kWritable);
+//  io_task_runner_->AddFdEvent(socket_, IOEvent::kReadable);
   Protocol::Ptr protocol = ReadHeader(Protocol::kBaseLen);
   LOG(DEBUG) << protocol->ToString();
   std::string body = ReadBody(protocol->content_length());
@@ -41,9 +44,14 @@ void ChannelPosix::OnFdReadable(int fd) {
 }
 
 void ChannelPosix::OnFdWriteable(int fd) {
-  if (!writing_protocol_.empty()) {
-    Protocol::Ptr protocol = writing_protocol_.front();
-    writing_protocol_.pop();
+  std::queue<Protocol::Ptr> writing_protocol;
+  {
+    base::MutexLockGuard g(writing_protocol_lock_);
+    std::swap(writing_protocol, writing_protocol_);
+  }
+  while (!writing_protocol.empty()) {
+    Protocol::Ptr protocol = writing_protocol.front();
+    writing_protocol.pop();
     std::string data = Channel::Serialize(protocol);
     sock::Send(socket_, data.data(), data.size());
     LOG(DEBUG) << "send data: " << data
