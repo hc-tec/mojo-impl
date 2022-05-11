@@ -19,7 +19,7 @@ class Core {
   Core(const Core&) = delete;
   Core& operator=(const Core&) = delete;
 
-  virtual ~Core();
+  ~Core() = default;
 
   static Core* Get();
 
@@ -61,7 +61,8 @@ class Core {
       MojoHandle invitation_handle,
       int socket);
   MojoResult AcceptInvitation(
-      MojoHandle* invitation_handle
+      MojoHandle* invitation_handle,
+      int socket
       );
 
  private:

@@ -120,5 +120,43 @@ MojoHandle Core::ExtractMessagePipeFromInvitation(const std::string& name) {
   return handle;
 }
 
+MojoResult Core::SendInvitation(MojoHandle invitation_handle,
+                                int socket) {
+
+  Dispatcher::Ptr dispatcher = GetDispatcher(invitation_handle);
+  if (!dispatcher || dispatcher->GetType() != Dispatcher::Type::kInvitation)
+    return MOJO_RESULT_INVALID_ARGUMENT;
+  auto* invitation_dispatcher =
+      static_cast<InvitationDispatcher*>(dispatcher.get());
+
+  ConnectionParams connection_params(socket);
+
+  // TODO: remove dispatcher, take the ownership of dispatcher
+
+  std::vector<std::pair<std::string, ports::PortRef>> attached_ports;
+  InvitationDispatcher::PortMapping attached_port_map =
+      invitation_dispatcher->TakeAttachPorts();
+//  invitation_dispatcher->Close();
+  for (auto& entry : attached_port_map)
+    attached_ports.emplace_back(entry.first, std::move(entry.second));
+
+  invitation_dispatcher->TakeAttachPorts();
+  GetNodeController()->SendInvitation(connection_params, attached_ports);
+
+  return MOJO_RESULT_OK;
+}
+
+MojoResult Core::AcceptInvitation(MojoHandle* invitation_handle,
+                                  int socket) {
+
+  auto dispatcher = InvitationDispatcher::Create();
+  *invitation_handle = AddDispatcher(dispatcher);
+  if (*invitation_handle == MOJO_HANDLE_INVALID)
+    return MOJO_RESULT_RESOURCE_EXHAUSTED;
+  ConnectionParams params(socket);
+  GetNodeController()->AcceptInvitation(params);
+  return MOJO_RESULT_OK;
+}
+
 }  // namespace mojo
 }  // namespace tit

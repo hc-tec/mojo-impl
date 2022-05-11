@@ -32,22 +32,21 @@ class NodeChannel : public Channel::Delegate {
     virtual void OnRequestPortMerge(const ports::NodeName& from_node,
                                     const ports::PortName& connector_port_name,
                                     const std::string& token) = 0;
-    virtual void OnAddBrokerClient(const ports::NodeName& from_node,
+    virtual void OnAddClient(const ports::NodeName& from_node,
                                    const ports::NodeName& client_name,
                                    int process_handle) = 0;
-    virtual void OnBrokerClientAdded(const ports::NodeName& from_node,
+    virtual void OnClientAdded(const ports::NodeName& from_node,
                                      const ports::NodeName& client_name,
-                                     int broker_channel) = 0;
-    virtual void OnAcceptBrokerClient(const ports::NodeName& from_node,
-                                      const ports::NodeName& broker_name,
-                                      int broker_channel,
-                                      const uint64_t broker_capabilities) = 0;
+                                     int channel) = 0;
+    virtual void OnAcceptClient(const ports::NodeName& from_node,
+                                      const ports::NodeName& client_name,
+                                      int channel) = 0;
     virtual void OnEventMessage(const ports::NodeName& from_node,
                                 const Protocol::Ptr& message) = 0;
     virtual void OnAcceptPeer(const ports::NodeName& from_node,
                               const ports::NodeName& token,
                               const ports::NodeName& peer_name,
-                              const ports::PortName& port_name);
+                              const ports::PortName& port_name) = 0;
     virtual void OnChannelError(const ports::NodeName& name,
                                 NodeChannel* channel) = 0;
   };
@@ -77,13 +76,12 @@ class NodeChannel : public Channel::Delegate {
   void AcceptPeer(const ports::NodeName& sender_name,
                   const ports::NodeName& token,
                   const ports::PortName& port_name);
-  void AddBrokerClient(const ports::NodeName& client_name,
-                       base::Process process_handle);
-  void BrokerClientAdded(const ports::NodeName& client_name,
-                         int broker_channel);
-  void AcceptBrokerClient(const ports::NodeName& broker_name,
-                          int broker_channel,
-                          const uint64_t broker_capabilities);
+  void AddClient(const ports::NodeName& client_name);
+  void ClientAdded(const ports::NodeName& client_name,
+                         int channel);
+  void AcceptClient(const ports::NodeName& name,
+                          int channel,
+                          const uint64_t capabilities);
   void RequestPortMerge(const ports::PortName& connector_port_name,
                         const std::string& token);
 

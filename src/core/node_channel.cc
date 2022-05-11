@@ -57,17 +57,34 @@ void NodeChannel::OnChannelMessage(const Protocol::Ptr& protocol) {
   Protocol::Ptr message;
 
   switch (protocol->msg_type()) {
-    case MsgType::kAcceptInvitation:
-      message = Protocol::TransToProtocolPtr<AcceptInvitationProtocol>();
-      Channel::DeserializeMessage(message, protocol->content());
-    case MsgType::kRequestPortMerge:
-      message = Protocol::TransToProtocolPtr<RequestPortMergeProtocol>();
-      Channel::DeserializeMessage(message, protocol->content());
+    case MsgType::kAcceptInvitation: {
+      AcceptInvitationProtocol::Ptr data = AcceptInvitationProtocol::Create();
+      Channel::DeserializeMessage(data, protocol->content());
+      delegate_->OnAcceptInvitation(remote_node_name_, data->token_,
+                                    data->invitee_name_);
       return;
-    case MsgType::kEventMessage:
-      message = Protocol::TransToProtocolPtr<UserMessage>();
-      Channel::DeserializeMessage(message, protocol->content());
+    }
+    case MsgType::kAcceptInvitee: {
+      AcceptInviteeProtocol::Ptr data = AcceptInviteeProtocol::Create();
+      Channel::DeserializeMessage(data, protocol->content());
+      delegate_->OnAcceptInvitee(remote_node_name_, data->inviter_name_,
+                                 data->token_);
       return;
+    }
+    case MsgType::kRequestPortMerge: {
+      RequestPortMergeProtocol::Ptr data = RequestPortMergeProtocol::Create();
+      Channel::DeserializeMessage(data, protocol->content());
+//      delegate_->OnRequestPortMerge(remote_node_name_,
+//                                    data->connector_port_name_);
+      return;
+    }
+    case MsgType::kEventMessage: {
+      AcceptInviteeProtocol::Ptr data = AcceptInviteeProtocol::Create();
+      Channel::DeserializeMessage(data, protocol->content());
+      delegate_->OnAcceptInvitee(remote_node_name_, data->inviter_name_,
+                                 data->token_);
+      return;
+    }
   }
 
   LOG(ERROR) << "Received invalid message type: "
