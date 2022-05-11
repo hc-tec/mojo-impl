@@ -54,7 +54,7 @@ class Port {
 
   void BufferEvent(const NodeName& from_node, Event::Ptr event);
 
-  void TakePendingMessage(std::vector<UserMessageEvent::Ptr>* messages);
+  void TakePendingMessage(std::vector<Event::Ptr>* messages);
 
   DISALLOW_COPY_AND_ASSIGN(Port);
 

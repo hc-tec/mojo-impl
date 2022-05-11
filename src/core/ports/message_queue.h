@@ -31,20 +31,20 @@ class MessageQueue {
 
   bool HasNextMessage() const;
 
-  void GetNextMessage(UserMessageEvent::Ptr* message);
+  void GetNextMessage(Event::Ptr* message);
 
   void MessageProcessed();
 
-  void AcceptMessage(UserMessageEvent::Ptr message,
+  void AcceptMessage(Event::Ptr message,
                      bool* has_next_message);
 
-  void TaskAllMessages(std::vector<UserMessageEvent::Ptr>* messages);
+  void TaskAllMessages(std::vector<Event::Ptr>* messages);
 
   size_t queued_message_count() const { return heap_.size(); }
 
   DISALLOW_COPY_AND_ASSIGN(MessageQueue);
  private:
-  std::vector<UserMessageEvent::Ptr> heap_;
+  std::vector<Event::Ptr> heap_;
   uint64 next_sequence_num_;
   bool signalable_ { true };
 };

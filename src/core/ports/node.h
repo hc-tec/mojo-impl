@@ -41,13 +41,13 @@ class Node {
   class Delegate {
    public:
     virtual ~Delegate() = default;
-    virtual void ForwardEvent(const NodeName& node, const Event& event) = 0;
+    virtual void ForwardEvent(const NodeName& node, const Event::Ptr & event) = 0;
     virtual void BroadcastEvent(const Event& event) = 0;
     virtual void PortStatusChanged(const PortRef& port_ref) = 0;
   };
 
-  static Ptr Create() {
-    return std::unique_ptr<Node>();
+  static Ptr Create(const NodeName& name, Delegate* delegate) {
+    return std::make_unique<Node>(name, delegate);
   }
 
   Node(const NodeName& name, Delegate* delegate);
@@ -68,11 +68,20 @@ class Node {
                              const NodeName& new_peer_node,
                              const PortName& new_peer_port);
 
+  int MergePorts(PortName* local_port_name,
+                 const PortRef& port_ref,
+                 const NodeName& destination_node_name,
+                 const PortName& destination_port_name);
+
+  int MergePortsResponse(const PortName& local_peer_port_name,
+                 const NodeName& destination_node_name,
+                 const PortName& destination_port_name);
+
   int GetMessage(const PortRef& port_ref,
-                 UserMessageEvent::Ptr* message);
+                 Event::Ptr* message);
 
   int SendUserMessage(const PortRef& port_ref,
-                      const UserMessageEvent::Ptr& message);
+                      const Event::Ptr& message);
 
   int ClosePort(const PortRef& port_ref);
 
@@ -99,7 +108,7 @@ class Node {
   };
 
   int SendUserMessageInternal(const PortRef& port_ref,
-                              const UserMessageEvent::Ptr& message);
+                              const Event::Ptr& message);
 
  private:
   NodeName name_;

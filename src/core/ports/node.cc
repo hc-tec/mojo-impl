@@ -6,6 +6,8 @@
 
 #include "base/mutex.h"
 #include "base/noncopyable.h"
+#include "core/ports/event.h"
+#include "core/protocols/response_port_merge.h"
 
 namespace tit {
 namespace mojo {
@@ -60,12 +62,11 @@ Node::~Node() {
 }
 
 int Node::SendUserMessageInternal(const PortRef& port_ref,
-                                  const UserMessageEvent::Ptr& message) {
+                                  const Event::Ptr& message) {
 //  UserMessageEvent::Ptr msg = UserMessageEvent::Ptr();
   message->set_from_port(port_ref.name());
   message->set_port_name(port_ref.port()->peer_port_name);
-  delegate_->ForwardEvent(port_ref.port()->peer_node_name,
-                          (const Event&)message);
+  delegate_->ForwardEvent(port_ref.port()->peer_node_name, message);
 }
 
 int Node::CreateUninitializedPort(PortRef* port_ref) {
@@ -140,7 +141,7 @@ int Node::CreatePortPair(PortRef* port0_ref, PortRef* port1_ref) {
 }
 
 int Node::ClosePort(const PortRef& port_ref) {
-  std::vector<UserMessageEvent::Ptr> messages;
+  std::vector<Event::Ptr> messages;
   auto port = port_ref.port();
   port->TakePendingMessage(&messages);
   ErasePort(port_ref.name());
@@ -156,7 +157,54 @@ void Node::ErasePort(const PortName& port_name) {
     port = std::move(it->second);
     ports_.erase(it);
   }
-  LOG(DEBUG) << "Deleted port " << port_name << "@" << name_;
+  LOG(TRACE) << "Deleted port " << port_name << "@" << name_;
+}
+
+int Node::MergePorts(
+    PortName* local_port_name,
+    const PortRef& port_ref,
+    const NodeName& destination_node_name,
+    const PortName& destination_port_name) {
+
+  ErasePort(port_ref.name());
+
+  Port::Ptr remote_port = port_ref.port();
+  Port::Ptr local_port;
+  {
+    base::MutexLockGuard g(ports_lock_);
+    *local_port_name = remote_port->peer_port_name;
+    auto it = ports_.find(*local_port_name);
+    if (it == ports_.end()) {
+      LOG(ERROR) << "Ignored";
+      return ERROR_PORT_UNKNOWN;
+    }
+    local_port = it->second;
+  }
+  UpdatePortPeerAddress(*local_port_name, local_port,
+                        destination_node_name, destination_port_name);
+  return OK;
+}
+
+int Node::MergePortsResponse(const PortName& local_peer_port_name,
+                             const NodeName& destination_node_name,
+                             const PortName& destination_port_name) {
+  Port::Ptr local_peer_port;
+  {
+    base::MutexLockGuard g(ports_lock_);
+    auto it = ports_.find(local_peer_port_name);
+    if (it == ports_.end()) {
+      LOG(ERROR) << "Ignored";
+      return ERROR_PORT_UNKNOWN;
+    }
+    local_peer_port = it->second;
+  }
+  PortName local_port_name = local_peer_port->peer_port_name;
+  PortRef local_port = peer_port_maps_[name_]
+                                      [local_peer_port_name]
+                                      [local_port_name];
+  PortName dummy;
+  MergePorts(&dummy, local_port, destination_node_name, destination_port_name);
+  return 0;
 }
 
 }  // namespace ports

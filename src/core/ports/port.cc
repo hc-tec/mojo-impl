@@ -20,7 +20,7 @@ void Port::BufferEvent(const NodeName& from_node, Event::Ptr event) {
 
 }
 
-void Port::TakePendingMessage(std::vector<UserMessageEvent::Ptr>* messages) {
+void Port::TakePendingMessage(std::vector<Event::Ptr>* messages) {
 
 }
 
