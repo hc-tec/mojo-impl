@@ -26,8 +26,8 @@ class MessagePipeDispatcher : public Dispatcher {
   Type GetType() const override;
   MojoResult Close() override;
 
-  MojoResult WriteMessage(const ports::UserMessageEvent::Ptr& message);
-  MojoResult ReadMessage(ports::UserMessageEvent::Ptr& message);
+  MojoResult WriteMessage(const ports::Event::Ptr& message);
+  MojoResult ReadMessage(ports::Event::Ptr& message);
 
  private:
   NodeController* node_controller_;

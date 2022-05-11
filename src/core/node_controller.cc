@@ -11,10 +11,10 @@ namespace tit {
 namespace mojo {
 
 void NodeController::ForwardEvent(const ports::NodeName& node,
-                                  const ports::Event& event) {
+                                  const ports::Event::Ptr & event) {
 
-  ports::UserMessageEvent::Ptr message_event =
-      (const ports::UserMessageEvent::Ptr&)event;
+//  ports::UserMessageEvent::Ptr message_event =
+//      (const ports::UserMessageEvent::Ptr&)event;
 
   if (node == name_) {
 
@@ -32,7 +32,7 @@ void NodeController::SetIOTaskRunner(IOTaskRunner* io_task_runner) {
 void NodeController::MergePortIntoInviter(const std::string& name,
                                           const ports::PortRef& port) {
   NodeChannel::Ptr inviter = GetInviterChannel();
-
+  inviter->RequestPortMerge(port.name(), name);
 }
 
 void NodeController::AddPeer(const ports::NodeName& name,
@@ -108,9 +108,9 @@ void NodeController::SendInvitation(
     PortMap& port_map = reserved_ports_[temp_node_name];
     for (auto& entry : attached_ports) {
       auto result = port_map.emplace(entry.first, entry.second);
-      if (result.second) {
-        LOG(ERROR) << "Duplicate attachment: " << entry.first;
-      }
+//      if (result.second) {
+//        LOG(ERROR) << "Duplicate attachment: " << entry.first;
+//      }
     }
   }
 
@@ -138,7 +138,36 @@ void NodeController::AcceptInvitation(ConnectionParams connection_params) {
 
 void NodeController::OnRequestPortMerge(
     const ports::NodeName& from_node,
-    const ports::PortName& connector_port_name, const std::string& token) {}
+    const ports::PortName& connector_port_name,
+    const std::string& message_pipe_name) {
+
+  ports::PortRef local_port;
+  {
+    base::MutexLockGuard g(reserved_ports_lock_);
+    auto it = reserved_ports_.find(from_node);
+    if (it == reserved_ports_.end()) {
+      LOG(ERROR) << "Ignoring port merge request from node " << from_node << ". "
+                 << "No ports reserved for that node.";
+      return;
+    }
+    PortMap& port_map = it->second;
+    auto port_it = port_map.find(message_pipe_name);
+    if (port_it == port_map.end()) {
+      LOG(ERROR) << "Ignoring request to connect to port for unknown name "
+                 << message_pipe_name << " from node " << from_node;
+      return;
+    }
+    local_port = port_it->second;
+    port_map.erase(port_it);
+    if (port_map.empty())
+      reserved_ports_.erase(it);
+  }
+  ports::PortName local_port_name;
+  node_->MergePorts(&local_port_name, local_port,
+                    from_node, connector_port_name);
+  GetInviterChannel()->ResponsePortMerge(connector_port_name, local_port_name);
+}
+
 void NodeController::OnAddClient(const ports::NodeName& from_node,
                                  const ports::NodeName& client_name,
                                  int process_handle) {}
@@ -204,6 +233,13 @@ void NodeController::OnAcceptPeer(const ports::NodeName& from_node,
                                   const ports::PortName& port_name) {}
 void NodeController::BroadcastEvent(const ports::Event& event) {}
 void NodeController::PortStatusChanged(const ports::PortRef& port_ref) {}
+
+void NodeController::OnResponsePortMerge(
+    const ports::NodeName& from_node,
+    const ports::PortName& connector_port_name,
+    const ports::PortName& port_name) {
+  node_->MergePortsResponse(connector_port_name,from_node, port_name);
+}
 
 }  // namespace mojo
 }  // namespace tit

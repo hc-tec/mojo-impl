@@ -26,6 +26,7 @@ class NodeController : public NodeChannel::Delegate,
 
   NodeController() {
     GenerateRandomName(&name_);
+    node_ = ports::Node::Create(name_, this);
   }
 
   void SetIOTaskRunner(IOTaskRunner* io_task_runner);
@@ -39,7 +40,10 @@ class NodeController : public NodeChannel::Delegate,
                           const ports::NodeName& invitee_name) override;
   void OnRequestPortMerge(const ports::NodeName& from_node,
                           const ports::PortName& connector_port_name,
-                          const std::string& token) override;
+                          const std::string& message_pipe_name) override;
+  void OnResponsePortMerge(const ports::NodeName& from_node,
+                          const ports::PortName& connector_port_name,
+                           const ports::PortName& port_name) override;
   void OnAddClient(const ports::NodeName& from_node,
                    const ports::NodeName& client_name,
                    int process_handle) override;
@@ -54,7 +58,7 @@ class NodeController : public NodeChannel::Delegate,
 
   // ports::Node::Delegate
   void ForwardEvent(const ports::NodeName &node,
-                    const ports::Event &event) override;
+                    const ports::Event::Ptr &event) override;
   void BroadcastEvent(const ports::Event &event) override;
   void PortStatusChanged(const ports::PortRef &port_ref) override;
 
@@ -100,6 +104,13 @@ class NodeController : public NodeChannel::Delegate,
   base::MutexLock reserved_ports_lock_;
   std::map<ports::NodeName, PortMap> reserved_ports_
       GUARDED_BY(reserved_ports_lock_);
+
+  // Guards |pending_port_merges_| and |reject_pending_merges_|.
+  base::MutexLock pending_port_merges_lock_;
+
+  // A set of port merge requests awaiting inviter connection.
+  std::vector<std::pair<std::string, ports::PortRef>> pending_port_merges_
+      GUARDED_BY(pending_port_merges_lock_);;
 
   // Channels to invitees during handshake.
   NodeMap pending_invitations_;

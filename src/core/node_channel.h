@@ -31,7 +31,10 @@ class NodeChannel : public Channel::Delegate {
                                     const ports::NodeName& invitee_name) = 0;
     virtual void OnRequestPortMerge(const ports::NodeName& from_node,
                                     const ports::PortName& connector_port_name,
-                                    const std::string& token) = 0;
+                                    const std::string& message_pipe_name) = 0;
+    virtual void OnResponsePortMerge(const ports::NodeName& from_node,
+                             const ports::PortName& connector_port_name,
+                             const ports::PortName& port_name) = 0;
     virtual void OnAddClient(const ports::NodeName& from_node,
                                    const ports::NodeName& client_name,
                                    int process_handle) = 0;
@@ -84,6 +87,8 @@ class NodeChannel : public Channel::Delegate {
                           const uint64_t capabilities);
   void RequestPortMerge(const ports::PortName& connector_port_name,
                         const std::string& token);
+  void ResponsePortMerge(const ports::PortName& connector_port_name,
+                         const ports::PortName& port_name);
 
   void SendChannelMessage(const Protocol::Ptr& message);
 

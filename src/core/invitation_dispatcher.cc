@@ -14,26 +14,13 @@ Dispatcher::Type InvitationDispatcher::GetType() const {
 }
 
 MojoResult InvitationDispatcher::AttachMessagePipe(
-    const std::string& name, ports::PortRef remote_peer_port) {
+    const std::string& name, const ports::PortRef& remote_peer_port) {
   base::MutexLockGuard g(lock_);
   auto r = attached_ports_.emplace(name, remote_peer_port);
   if (!r.second) {
     return MOJO_RESULT_ALREADY_EXISTS;
   }
   return MOJO_RESULT_OK;
-}
-
-InvitationDispatcher::PortMapping InvitationDispatcher::TakeAttachPorts() {
-  PortMapping attached_ports;
-  {
-    base::MutexLockGuard g(lock_);
-    std::swap(attached_ports, attached_ports_);
-  }
-  return attached_ports;
-}
-
-InvitationDispatcher::Ptr InvitationDispatcher::Create() {
-  return std::make_shared<InvitationDispatcher>();
 }
 
 MojoResult InvitationDispatcher::ExtractMessagePipe(
@@ -55,6 +42,19 @@ MojoResult InvitationDispatcher::ExtractMessagePipe(
     return MOJO_RESULT_RESOURCE_EXHAUSTED;
 
   return MOJO_RESULT_OK;
+}
+
+InvitationDispatcher::PortMapping InvitationDispatcher::TakeAttachPorts() {
+  PortMapping attached_ports;
+  {
+    base::MutexLockGuard g(lock_);
+    std::swap(attached_ports, attached_ports_);
+  }
+  return attached_ports;
+}
+
+InvitationDispatcher::Ptr InvitationDispatcher::Create() {
+  return std::make_shared<InvitationDispatcher>();
 }
 
 MojoResult InvitationDispatcher::Close() { return 0; }

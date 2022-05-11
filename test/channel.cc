@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
   std::string cmd_line = base::CurrentCommandLine();
   base::ArgValueParser<int> int_parser;
 
-  int handler = int_parser("handler");
+  int handler = int_parser("mojo-platform-channel-handle");
   if (handler != (int) INTMAX_MAX) {
     log::InitTitLogging(argv[0], AddChildPrefix, nullptr);
     LOG(INFO) << "Born from parent";
@@ -86,7 +86,7 @@ int main(int argc, char* argv[]) {
 
   node_channel->Start();
 
-  std::string argument("-handler=");
+  std::string argument("-mojo-platform-channel-handle=");
   argument.append(std::to_string(socket_pair[0]));
   char* argument_list[] = {
       const_cast<char*>(base::CurrentExecuteName().data()),

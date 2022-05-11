@@ -17,8 +17,8 @@ void AddParentPrefix(
     const log::LogMessageInfo& l,
     void* data) {
   stream << "[parent] " << l.level_
-         << "20220406-18:30:30"
-         << ' ' << PlatformThread::CurrentId()
+//         << "20220406-18:30:30"
+//         << ' ' << PlatformThread::CurrentId()
          << ' ' << l.fullname_ << ':' << l.line_ << ' ';
 }
 
@@ -27,8 +27,8 @@ void AddChildPrefix(
     const log::LogMessageInfo& l,
     void* data) {
   stream << "[Child ] " << l.level_
-         << "20220406-18:30:30"
-         << ' ' << PlatformThread::CurrentId()
+//         << "20220406-18:30:30"
+//         << ' ' << PlatformThread::CurrentId()
          << ' ' << l.fullname_ << ':' << l.line_ << ' ';
 }
 
@@ -44,12 +44,15 @@ int main(int argc, char* argv[]) {
 
 
   base::ArgValueParser<int> int_parser;
-  int handler = int_parser("handler");
+  int handler = int_parser("mojo-platform-channel-handle");
   if (handler != (int) INTMAX_MAX) {
     log::InitTitLogging(argv[0], AddChildPrefix, nullptr);
     MojoHandle invitee_handle;
     core->AcceptInvitation(&invitee_handle, handler);
-
+    MojoHandle pipe;
+    core->ExtractMessagePipeFromInvitation(invitee_handle,
+                                        "hello",
+                                        &pipe);
     io_task_runner->Run();
     return 123;
   }
@@ -57,9 +60,13 @@ int main(int argc, char* argv[]) {
   SockPairChannel sock_pair;
 
   auto dispatcher = InvitationDispatcher::Create();
-  MojoHandle invitation_handle = core->AddDispatcher(dispatcher);
 
-  std::string argument("-handler=");
+  MojoHandle invitation_handle = core->AddDispatcher(dispatcher);
+  MojoHandle pipe;
+  core->AttachMessagePipeToInvitation(invitation_handle,
+                                      "hello",
+                                      &pipe);
+  std::string argument("-mojo-platform-channel-handle=");
   argument.append(std::to_string(sock_pair.remote_endpoint()));
   char* argument_list[] = {
       const_cast<char*>(base::CurrentExecuteName().data()),

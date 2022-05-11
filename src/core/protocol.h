@@ -21,6 +21,7 @@ enum class MsgType : uint8 {
   kAcceptInvitation,
   kEventMessage,
   kRequestPortMerge,
+  kResponsePortMerge,
   kRequestIntroduction,
   kIntroduction,
   kBroadcastEvent,

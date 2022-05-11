@@ -29,7 +29,7 @@ class InvitationDispatcher : public Dispatcher {
   MojoResult Close() override;
 
   MojoResult AttachMessagePipe(const std::string& name,
-                               ports::PortRef remote_peer_port);
+                               const ports::PortRef& remote_peer_port);
 
   MojoResult ExtractMessagePipe(const std::string& name,
                                 MojoHandle* message_pipe_handle);

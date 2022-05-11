@@ -100,10 +100,10 @@ MojoResult Core::ExtractMessagePipeFromInvitation(
   );
 
   MojoResult r = invitation_dispatcher->ExtractMessagePipe(name, message_pipe_handle);
-
-  if (r != MOJO_RESULT_OK)
+  if (r == MOJO_RESULT_OK)
     return r;
 
+  LOG(TRACE) << "Extract message pipe from invitation";
   *message_pipe_handle = ExtractMessagePipeFromInvitation(name);
 
   if (*message_pipe_handle == MOJO_HANDLE_INVALID)
@@ -116,7 +116,7 @@ MojoHandle Core::ExtractMessagePipeFromInvitation(const std::string& name) {
   GetNodeController()->node()->CreatePortPair(&port0, &port1);
   MojoHandle handle = AddDispatcher(MessagePipeDispatcher::Create(
       GetNodeController(), port0));
-  GetNodeController()->MergePortIntoInviter(name, port1);
+  GetNodeController()->MergePortIntoInviter(name, port0);
   return handle;
 }
 
