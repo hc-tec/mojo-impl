@@ -44,7 +44,7 @@ class AcceptPeerProtocol : public ProtocolInterface {
   }
 
   ProtocolInterface::Ptr next_layer() override { return nullptr; }
-  MsgType type() override { return MsgType::kAcceptInvitation; }
+  MsgType type() override { return MsgType::kAcceptPeer; }
 
   std::string ToString() {
     std::stringstream ss;

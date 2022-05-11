@@ -39,7 +39,7 @@ class AcceptInviteeProtocol : public ProtocolInterface {
   }
 
   ProtocolInterface::Ptr next_layer() override { return nullptr; }
-  MsgType type() override { return MsgType::kAcceptInvitation; }
+  MsgType type() override { return MsgType::kAcceptInvitee; }
 
   std::string ToString() {
     std::stringstream ss;

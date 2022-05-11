@@ -22,6 +22,7 @@ class RequestPortMergeProtocol : public ProtocolInterface {
     ByteArray::Ptr bt = std::make_shared<ByteArray>();
     bt->writeFuint64(connector_port_name_.v1);
     bt->writeFuint64(connector_port_name_.v2);
+    bt->writeStringF64(message_pipe_name_);
     bt->setPosition(0);
     return bt;
   }
@@ -30,6 +31,7 @@ class RequestPortMergeProtocol : public ProtocolInterface {
     uint64_t v1, v2;
     v1 = bt->readFuint64();
     v2 = bt->readFuint64();
+    message_pipe_name_ = bt->readStringF64();
     connector_port_name_ = ports::PortName(v1, v2);
   }
 
@@ -38,12 +40,14 @@ class RequestPortMergeProtocol : public ProtocolInterface {
 
   std::string ToString() {
     std::stringstream ss;
-    ss << "[ port_name_: " << connector_port_name_ << " ]";
+    ss << "[ port_name_: " << connector_port_name_ << " ]"
+       << "message pipe name: " << message_pipe_name_;
     return ss.str();
   }
 
  public:
-  ports::PortName connector_port_name_{ports::kInvalidPortName};
+  ports::PortName connector_port_name_{ ports::kInvalidPortName };
+  std::string message_pipe_name_;
 };
 
 }  // namespace mojo
