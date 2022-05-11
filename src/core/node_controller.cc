@@ -36,8 +36,8 @@ void NodeController::MergePortIntoInviter(const std::string& name,
 }
 
 void NodeController::AddPeer(const ports::NodeName& name,
-                                         const NodeChannel::Ptr& channel,
-                                         bool start_channel) {
+                             const NodeChannel::Ptr& channel,
+                             bool start_channel) {
   channel->SetRemoteNodeName(name);
   {
     base::MutexLockGuard g(peers_lock_);

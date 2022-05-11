@@ -24,6 +24,10 @@ class NodeController : public NodeChannel::Delegate,
     return std::make_unique<NodeController>();
   }
 
+  NodeController() {
+    GenerateRandomName(&name_);
+  }
+
   void SetIOTaskRunner(IOTaskRunner* io_task_runner);
 
   // NodeChannel::Delegate
