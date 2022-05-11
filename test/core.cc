@@ -4,7 +4,7 @@
 
 #include "base/process.h"
 #include "core/core.h"
-#include "core/sock_ops.h"
+#include "core/sock_pair_channel.h"
 #include "core/invitation_dispatcher.h"
 #include "core/libuv_io_task_runner_adapter.h"
 #include "log/logging.h"
@@ -54,16 +54,13 @@ int main(int argc, char* argv[]) {
     return 123;
   }
 
-  int socket_pair[2];
-  socketpair(AF_UNIX, SOCK_STREAM, 0, socket_pair);
-  sock::set_nonblock(socket_pair[0]);
-  sock::set_nonblock(socket_pair[1]);
+  SockPairChannel sock_pair;
 
   auto dispatcher = InvitationDispatcher::Create();
   MojoHandle invitation_handle = core->AddDispatcher(dispatcher);
 
   std::string argument("-handler=");
-  argument.append(std::to_string(socket_pair[1]));
+  argument.append(std::to_string(sock_pair.remote_endpoint()));
   char* argument_list[] = {
       const_cast<char*>(base::CurrentExecuteName().data()),
       const_cast<char*>(argument.data()), NULL};
@@ -71,7 +68,7 @@ int main(int argc, char* argv[]) {
   Process* child_process = base::Process::LaunchProcess(argument_list);
   delete child_process;
 
-  core->SendInvitation(invitation_handle, socket_pair[0]);
+  core->SendInvitation(invitation_handle, sock_pair.local_endpoint());
 
   io_task_runner->Run();
   return 456;
