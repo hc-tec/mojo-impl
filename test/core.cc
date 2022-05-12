@@ -2,6 +2,8 @@
 // Created by titto on 2022/5/11.
 //
 
+#include <iostream>
+
 #include "base/process.h"
 #include "core/core.h"
 #include "core/sock_pair_channel.h"
@@ -19,7 +21,8 @@ void AddParentPrefix(
   stream << "[parent] " << l.level_
 //         << "20220406-18:30:30"
 //         << ' ' << PlatformThread::CurrentId()
-         << ' ' << l.fullname_ << ':' << l.line_ << ' ';
+         << ' ' << l.fullname_ << ':' << l.line_ << ' '
+  ;
 }
 
 void AddChildPrefix(
@@ -29,7 +32,8 @@ void AddChildPrefix(
   stream << "[Child ] " << l.level_
 //         << "20220406-18:30:30"
 //         << ' ' << PlatformThread::CurrentId()
-         << ' ' << l.fullname_ << ':' << l.line_ << ' ';
+         << ' ' << l.fullname_ << ':' << l.line_ << ' '
+  ;
 }
 
 int main(int argc, char* argv[]) {
@@ -40,6 +44,7 @@ int main(int argc, char* argv[]) {
 
   LibuvIOTaskRunnerAdapter* io_task_runner =
       new LibuvIOTaskRunnerAdapter();
+
   core->SetIOTaskRunner(io_task_runner);
 
 
@@ -53,7 +58,14 @@ int main(int argc, char* argv[]) {
     core->ExtractMessagePipeFromInvitation(invitee_handle,
                                         "hello",
                                         &pipe);
-    io_task_runner->Run();
+
+    io_task_runner->Start();
+
+    sleep(2);
+    ports::Event::Ptr event = ports::Event::Create();
+    core->ReadMessage(pipe, event);
+    char ch;
+    std::cin >> ch;
     return 123;
   }
 
@@ -66,6 +78,7 @@ int main(int argc, char* argv[]) {
   core->AttachMessagePipeToInvitation(invitation_handle,
                                       "hello",
                                       &pipe);
+
   std::string argument("-mojo-platform-channel-handle=");
   argument.append(std::to_string(sock_pair.remote_endpoint()));
   char* argument_list[] = {
@@ -76,7 +89,12 @@ int main(int argc, char* argv[]) {
   delete child_process;
 
   core->SendInvitation(invitation_handle, sock_pair.local_endpoint());
+  io_task_runner->Start();
 
-  io_task_runner->Run();
+  sleep(1);
+  core->WriteMessage(pipe, "heartbeat");
+
+  char ch;
+  std::cin >> ch;
   return 456;
 }
