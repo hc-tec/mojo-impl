@@ -4,6 +4,8 @@
 
 #include "message_queue.h"
 
+#include "log/logging.h"
+
 namespace tit {
 namespace mojo {
 namespace ports {
@@ -20,10 +22,13 @@ bool MessageQueue::HasNextMessage() const {
   return !heap_.empty();
 }
 
-void MessageQueue::GetNextMessage(Event::Ptr *message) {
+void MessageQueue::GetNextMessage(UserMessage::Ptr *message) {
 //  std::pop_heap(heap_.begin(), heap_.end());
   *message = std::move(heap_.back());
   heap_.pop_back();
+
+  LOG(TRACE) << "Read Message " << (*message)->data_
+             << " from port @" << (*message)->from_port_name_;
 
   constexpr size_t kHeapMinimumShrinkSize = 16;
   constexpr size_t kHeapShrinkInterval = 512;
@@ -37,9 +42,11 @@ void MessageQueue::MessageProcessed() {
   ++next_sequence_num_;
 }
 
-void MessageQueue::AcceptMessage(Event::Ptr message,
+void MessageQueue::AcceptMessage(UserMessage::Ptr message,
                                  bool *has_next_message) {
-  heap_.emplace_back(std::move(message));
+  LOG(TRACE) << "Accept Message " << message->data_
+             << " from port @" << message->from_port_name_;
+  heap_.push_back(std::move(message));
   if (!signalable_) {
     *has_next_message = false;
   } else {
@@ -47,7 +54,7 @@ void MessageQueue::AcceptMessage(Event::Ptr message,
   }
 }
 
-void MessageQueue::TaskAllMessages(std::vector<Event::Ptr> *messages) {
+void MessageQueue::TaskAllMessages(std::vector<UserMessage::Ptr> *messages) {
   *messages = std::move(heap_);
 }
 

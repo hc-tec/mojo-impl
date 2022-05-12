@@ -24,17 +24,36 @@ class Event {
   }
 
   bool HasMessage() const { return !!message_; }
+
+  template <class T>
+  typename T::Ptr GetMessage() {
+    return std::dynamic_pointer_cast<T>(message_);
+  }
+
+  template <class T>
+  typename T::Ptr* GetMessagePtr() {
+    return std::dynamic_pointer_cast<T>(message_);
+  }
+
+  ProtocolInterface::Ptr* GetMessage() {
+    return &message_;
+  }
+
   void AttachMessage(const ProtocolInterface::Ptr& message) {
     message_ = message;
   }
 
-  const PortName& port_name() const { return port_name_; }
+  void AttachMessage(ProtocolInterface::Ptr& message) {
+    message_ = message;
+  }
+
+  const PortName& to_port() const { return to_port_; }
   const PortName& from_port() const { return from_port_; }
 
-  void set_port_name(const PortName& port_name) { port_name_ = port_name; }
+  void set_to_port(const PortName& port_name) { to_port_ = port_name; }
   void set_from_port(const PortName& from_port) { from_port_ = from_port; }
  private:
-  PortName port_name_;
+  PortName to_port_;
   PortName from_port_;
   ProtocolInterface::Ptr message_;
 };

@@ -10,7 +10,7 @@
 
 #include "base/def.h"
 #include "base/noncopyable.h"
-#include "core/ports/event.h"
+#include "core/protocols/user_message.h"
 
 namespace tit {
 namespace mojo {
@@ -31,20 +31,20 @@ class MessageQueue {
 
   bool HasNextMessage() const;
 
-  void GetNextMessage(Event::Ptr* message);
+  void GetNextMessage(UserMessage::Ptr* message);
 
   void MessageProcessed();
 
-  void AcceptMessage(Event::Ptr message,
+  void AcceptMessage(UserMessage::Ptr message,
                      bool* has_next_message);
 
-  void TaskAllMessages(std::vector<Event::Ptr>* messages);
+  void TaskAllMessages(std::vector<UserMessage::Ptr>* messages);
 
   size_t queued_message_count() const { return heap_.size(); }
 
   DISALLOW_COPY_AND_ASSIGN(MessageQueue);
  private:
-  std::vector<Event::Ptr> heap_;
+  std::vector<UserMessage::Ptr> heap_;
   uint64 next_sequence_num_;
   bool signalable_ { true };
 };
