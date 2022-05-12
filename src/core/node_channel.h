@@ -44,8 +44,8 @@ class NodeChannel : public Channel::Delegate {
     virtual void OnAcceptClient(const ports::NodeName& from_node,
                                       const ports::NodeName& client_name,
                                       int channel) = 0;
-    virtual void OnEventMessage(const ports::NodeName& from_node,
-                                const Protocol::Ptr& message) = 0;
+    virtual void OnUserMessage(const ports::NodeName& from_node,
+                                const UserMessage::Ptr& message) = 0;
     virtual void OnAcceptPeer(const ports::NodeName& from_node,
                               const ports::NodeName& token,
                               const ports::NodeName& peer_name,

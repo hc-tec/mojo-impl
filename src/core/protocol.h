@@ -19,9 +19,9 @@ enum class MsgType : uint8 {
 
   kAcceptInvitee,
   kAcceptInvitation,
-  kEventMessage,
   kRequestPortMerge,
   kResponsePortMerge,
+  kUserMessage,
   kRequestIntroduction,
   kIntroduction,
   kBroadcastEvent,
@@ -150,7 +150,7 @@ class Protocol : public ProtocolInterface {
   // We called following variables Header except for the data_ field.
   uint8 magic_ { kMagic };
   uint8 version_ { kDefaultVersion };
-  uint8 type_ { static_cast<uint8>(MsgType::kEventMessage) };
+  uint8 type_ { static_cast<uint8>(MsgType::kUserMessage) };
   uint32_t content_length_ { 0 };
   std::string data_;
   ProtocolInterface::Ptr next_layer_;

@@ -6,6 +6,7 @@
 #define MOJO_IMPL_NODE_CONTROLLER_H
 
 #include <memory>
+#include <queue>
 #include <unordered_map>
 
 #include "core/io_task_runner.h"
@@ -20,6 +21,8 @@ class NodeController : public NodeChannel::Delegate,
  public:
   using Ptr = std::unique_ptr<NodeController>;
   using PortMap = std::map<std::string, ports::PortRef>;
+  using OutgoingMessageQueue = std::queue<Protocol::Ptr>;
+
   static Ptr Create() {
     return std::make_unique<NodeController>();
   }
@@ -51,8 +54,8 @@ class NodeController : public NodeChannel::Delegate,
                      const ports::NodeName& client_name, int channel) override;
   void OnAcceptClient(const ports::NodeName& from_node,
                       const ports::NodeName& client_name, int channel) override;
-  void OnEventMessage(const ports::NodeName& from_node,
-                      const Protocol::Ptr& message) override;
+  void OnUserMessage(const ports::NodeName& from_node,
+                     const UserMessage::Ptr& message) override;
   void OnChannelError(const ports::NodeName &name,
                       NodeChannel *channel) override;
 
@@ -65,6 +68,17 @@ class NodeController : public NodeChannel::Delegate,
   void SendInvitation(
       ConnectionParams connection_params,
       const std::vector<std::pair<std::string, ports::PortRef>>& attached_ports);
+
+  int SendUserMessage(
+      const ports::PortRef& port,
+      const ports::Event::Ptr& event);
+
+  int GetUserMessage(
+      const ports::PortRef& port,
+      ports::Event::Ptr& event);
+
+  void SendPeerEvent(const ports::NodeName& node,
+                     const ports::Event::Ptr& event);
 
   void AcceptInvitation(ConnectionParams connection_params);
 
@@ -103,6 +117,9 @@ class NodeController : public NodeChannel::Delegate,
 
   base::MutexLock peers_lock_;
   NodeMap peers_ GUARDED_BY(peers_lock_);
+  // Outgoing message queues for peers we've heard of but can't yet talk to.
+  std::unordered_map<ports::NodeName, OutgoingMessageQueue>
+      pending_peer_messages_ GUARDED_BY(peers_lock_);
 
   base::MutexLock reserved_ports_lock_;
   std::map<ports::NodeName, PortMap> reserved_ports_

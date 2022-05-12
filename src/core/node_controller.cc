@@ -19,7 +19,7 @@ void NodeController::ForwardEvent(const ports::NodeName& node,
   if (node == name_) {
 
   } else {
-
+    SendPeerEvent(node, event);
   }
 
 
@@ -47,6 +47,7 @@ void NodeController::AddPeer(const ports::NodeName& name,
                              const NodeChannel::Ptr& channel,
                              bool start_channel) {
   channel->SetRemoteNodeName(name);
+  OutgoingMessageQueue pending_messages;
   {
     base::MutexLockGuard g(peers_lock_);
     if (peers_.find(name) != peers_.end()) {
@@ -59,9 +60,20 @@ void NodeController::AddPeer(const ports::NodeName& name,
       return;
     }
     LOG(DEBUG) << "Accepting new peer " << name << " on node " << name_;
+    auto it = pending_peer_messages_.find(name);
+    if (it != pending_peer_messages_.end()) {
+      std::swap(pending_messages, it->second);
+      pending_peer_messages_.erase(it);
+    }
   }
+
   if (start_channel)
     channel->Start();
+
+  while (!pending_messages.empty()) {
+    channel->SendChannelMessage(pending_messages.front());
+    pending_messages.pop();
+  }
 }
 
 void NodeController::DropPeer(const ports::NodeName& name) {
@@ -72,6 +84,8 @@ void NodeController::DropPeer(const ports::NodeName& name) {
       peers_.erase(it);
       LOG(DEBUG) << "Dropped peer " << name;
     }
+    pending_peer_messages_.erase(name);
+    pending_invitations_.erase(name);
   }
   std::vector<ports::PortRef> ports_to_close;
   {
@@ -186,8 +200,6 @@ void NodeController::OnClientAdded(const ports::NodeName& from_node,
 void NodeController::OnAcceptClient(const ports::NodeName& from_node,
                                     const ports::NodeName& client_name,
                                     int channel) {}
-void NodeController::OnEventMessage(const ports::NodeName& from_node,
-                                    const Protocol::Ptr& message) {}
 
 void NodeController::OnAcceptInvitee(const ports::NodeName& from_node,
                                      const ports::NodeName& inviter_name,
@@ -270,6 +282,58 @@ void NodeController::HandlePendingMergePort() {
   }
 
 }
+int NodeController::SendUserMessage(const ports::PortRef& port,
+                                    const ports::Event::Ptr& event) {
+  return node_->SendUserMessage(port, event);
+}
+
+int NodeController::GetUserMessage(const ports::PortRef& port,
+                                   ports::Event::Ptr& event) {
+  return node_->GetMessage(port, event);
+}
+
+void NodeController::SendPeerEvent(const ports::NodeName& node,
+                                   const ports::Event::Ptr& event) {
+  if (!event->HasMessage()) {
+    LOG(TRACE) << "There isn't any message on the event";
+    return;
+  }
+  ProtocolInterface::Ptr message = event->GetMessage<ProtocolInterface>();
+  Protocol::Ptr protocol = Protocol::Create(
+      message->type(),
+      Channel::SerializeMessage(message));
+  NodeChannel::Ptr peer_channel = GetPeerChannel(node);
+  if (peer_channel) {
+
+    peer_channel->SendChannelMessage(protocol);
+    return;
+  }
+
+  {
+    base::MutexLockGuard g(peers_lock_);
+    auto it = peers_.find(node);
+    if (it == peers_.end()) {
+      auto& queue = pending_peer_messages_[node];
+      queue.emplace(protocol);
+    } else {
+      peer_channel = it->second;
+    }
+    if (peer_channel)
+      peer_channel->SendChannelMessage(protocol);
+  }
+}
+
+
+void NodeController::OnUserMessage(const ports::NodeName& from_node,
+                                   const UserMessage::Ptr& message) {
+  ports::Event::Ptr event = ports::Event::Create();
+  event->AttachMessage(message);
+  event->set_from_port(message->from_port_name_);
+  event->set_to_port(message->to_port_name_);
+  node_->OnUserMessage(from_node, event);
+}
+
+
 
 }  // namespace mojo
 }  // namespace tit

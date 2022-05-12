@@ -158,5 +158,33 @@ MojoResult Core::AcceptInvitation(MojoHandle* invitation_handle,
   return MOJO_RESULT_OK;
 }
 
+MojoResult Core::WriteMessage(MojoHandle message_pipe_producer_handle,
+                                      const std::string& data) {
+  auto dispatcher = GetDispatcher(message_pipe_producer_handle);
+  if (!dispatcher || dispatcher->GetType() != Dispatcher::Type::kMessagePipe)
+    return MOJO_RESULT_INVALID_ARGUMENT;
+  MessagePipeDispatcher* message_pipe_dispatcher =
+      dynamic_cast<MessagePipeDispatcher*>(dispatcher.get());
+  ports::Event::Ptr event = ports::Event::Create();
+  UserMessage::Ptr message = UserMessage::Create();
+  message->data_ = data;
+  event->AttachMessage(message);
+  return message_pipe_dispatcher->WriteMessage(event);
+}
+
+MojoResult Core::ReadMessage(MojoHandle message_pipe_consumer_handle,
+                             ports::Event::Ptr& event) {
+
+  auto dispatcher = GetDispatcher(message_pipe_consumer_handle);
+  if (!dispatcher || dispatcher->GetType() != Dispatcher::Type::kMessagePipe)
+    return MOJO_RESULT_INVALID_ARGUMENT;
+  MessagePipeDispatcher* message_pipe_dispatcher =
+      dynamic_cast<MessagePipeDispatcher*>(dispatcher.get());
+  UserMessage::Ptr message = UserMessage::Create();
+  event->AttachMessage(message);
+  message_pipe_dispatcher->ReadMessage(event);
+  return MOJO_RESULT_OK;
+}
+
 }  // namespace mojo
 }  // namespace tit

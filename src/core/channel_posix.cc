@@ -15,7 +15,7 @@ namespace tit {
 namespace mojo {
 
 void ChannelPosix::Start() {
-  io_task_runner_->AddFdEvent(socket_, IOEvent::kReadable);
+  io_task_runner_->AddFdEvent(socket_, IOEvent::kReadWritable);
 }
 
 void ChannelPosix::Read() {
@@ -23,7 +23,7 @@ void ChannelPosix::Read() {
 }
 
 void ChannelPosix::Write(const Protocol::Ptr& protocol) {
-  io_task_runner_->AddFdEvent(socket_, IOEvent::kWritable);
+//  io_task_runner_->AddFdEvent(socket_, IOEvent::kReadWritable);
   {
     base::MutexLockGuard g(writing_protocol_lock_);
     writing_protocol_.push(protocol);
@@ -57,7 +57,7 @@ void ChannelPosix::OnFdWriteable(int fd) {
     LOG(DEBUG) << "send data: " << data
               << " size: " << data.size();
   }
-  io_task_runner_->AddFdEvent(socket_, IOEvent::kReadable);
+//  io_task_runner_->AddFdEvent(socket_, IOEvent::kReadWritable);
 }
 
 std::string ChannelPosix::ReadFixBufFromSocket(uint16 fix_len) const {

@@ -40,11 +40,11 @@ class Core {
   MojoResult CreateMessagePipe(MojoHandle* message_pip_handle0,
                                MojoHandle* message_pip_handle1);
 
-  MojoHandle WriteData(MojoHandle data_pipe_producer_handle,
+  MojoResult WriteMessage(MojoHandle message_pipe_producer_handle,
                        const std::string& data);
 
-  MojoHandle ReadData(MojoHandle data_pipe_consumer_handle,
-                      std::string& data);
+  MojoResult ReadMessage(MojoHandle message_pipe_consumer_handle,
+                      ports::Event::Ptr& event);
 
   // Invitation API
   MojoResult CreateInvitation(MojoHandle* invitation_handle);

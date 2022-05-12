@@ -24,5 +24,14 @@ MessagePipeDispatcher::Ptr MessagePipeDispatcher::Create(
 
 MojoResult MessagePipeDispatcher::Close() { return 0; }
 
+MojoResult MessagePipeDispatcher::WriteMessage(
+    const ports::Event::Ptr &message) {
+ return node_controller_->SendUserMessage(port_, message);
+}
+
+MojoResult MessagePipeDispatcher::ReadMessage(ports::Event::Ptr &message) {
+  return node_controller_->GetUserMessage(port_, message);
+}
+
 }  // namespace mojo
 }  // namespace tit

@@ -62,7 +62,8 @@ void NodeChannel::OnChannelMessage(const Protocol::Ptr& protocol) {
       LOG(TRACE) << "Msg: Accept Invitation";
       AcceptInvitationProtocol::Ptr data = AcceptInvitationProtocol::Create();
       Channel::DeserializeMessage(data, protocol->content());
-      delegate_->OnAcceptInvitation(remote_node_name_, data->token_,
+      delegate_->OnAcceptInvitation(remote_node_name_,
+                                    data->token_,
                                     data->invitee_name_);
       return;
     }
@@ -70,7 +71,8 @@ void NodeChannel::OnChannelMessage(const Protocol::Ptr& protocol) {
       LOG(TRACE) << "Msg: Accept Invitee";
       AcceptInviteeProtocol::Ptr data = AcceptInviteeProtocol::Create();
       Channel::DeserializeMessage(data, protocol->content());
-      delegate_->OnAcceptInvitee(remote_node_name_, data->inviter_name_,
+      delegate_->OnAcceptInvitee(remote_node_name_,
+                                 data->inviter_name_,
                                  data->token_);
       return;
     }
@@ -92,11 +94,11 @@ void NodeChannel::OnChannelMessage(const Protocol::Ptr& protocol) {
                                     data->port_name_);
       return;
     }
-    case MsgType::kEventMessage: {
-      AcceptInviteeProtocol::Ptr data = AcceptInviteeProtocol::Create();
+    case MsgType::kUserMessage: {
+      LOG(TRACE) << "Msg: User Message";
+      UserMessage::Ptr data = UserMessage::Create();
       Channel::DeserializeMessage(data, protocol->content());
-      delegate_->OnAcceptInvitee(remote_node_name_, data->inviter_name_,
-                                 data->token_);
+      delegate_->OnUserMessage(remote_node_name_, data);
       return;
     }
   }
