@@ -78,10 +78,13 @@ class Node {
                  const PortName& destination_port_name);
 
   int GetMessage(const PortRef& port_ref,
-                 Event::Ptr* message);
+                 Event::Ptr& event);
 
   int SendUserMessage(const PortRef& port_ref,
                       const Event::Ptr& message);
+
+  int OnUserMessage(const NodeName& from_node,
+                    const Event::Ptr& event);
 
   int ClosePort(const PortRef& port_ref);
 

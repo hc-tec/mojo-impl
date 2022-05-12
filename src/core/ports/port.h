@@ -52,7 +52,7 @@ class Port {
 
   void NextEvent(NodeName* from_node, Event::Ptr* event);
 
-  void BufferEvent(const NodeName& from_node, Event::Ptr event);
+  void BufferEvent(const NodeName& from_node, const Event::Ptr& event);
 
   void TakePendingMessage(std::vector<Event::Ptr>* messages);
 

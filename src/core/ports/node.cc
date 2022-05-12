@@ -7,7 +7,7 @@
 #include "base/mutex.h"
 #include "base/noncopyable.h"
 #include "core/ports/event.h"
-#include "core/protocols/response_port_merge.h"
+#include "core/protocols/user_message.h"
 
 namespace tit {
 namespace mojo {
@@ -62,11 +62,14 @@ Node::~Node() {
 }
 
 int Node::SendUserMessageInternal(const PortRef& port_ref,
-                                  const Event::Ptr& message) {
-//  UserMessageEvent::Ptr msg = UserMessageEvent::Ptr();
-  message->set_from_port(port_ref.name());
-  message->set_port_name(port_ref.port()->peer_port_name);
-  delegate_->ForwardEvent(port_ref.port()->peer_node_name, message);
+                                  const Event::Ptr& event) {
+  UserMessage::Ptr message = event->GetMessage<UserMessage>();
+  event->set_from_port(port_ref.name());
+  event->set_to_port(port_ref.port()->peer_port_name);
+  message->to_port_name_ = event->to_port();
+  message->from_port_name_ = event->from_port();
+  delegate_->ForwardEvent(
+      port_ref.port()->peer_node_name, event);
 }
 
 int Node::CreateUninitializedPort(PortRef* port_ref) {
@@ -212,7 +215,38 @@ int Node::MergePortsResponse(const PortName& local_peer_port_name,
   return 0;
 }
 
-}  // namespace ports
+int Node::SendUserMessage(const PortRef& port_ref, const Event::Ptr& event) {
+  int r = SendUserMessageInternal(port_ref, event);
+  return r;
+}
 
+int Node::OnUserMessage(const NodeName& from_node,
+                        const Event::Ptr& event) {
+//  if (from_node == name_) {
+//    LOG(ERROR) << "Unknown Node name" << from_node;
+//    return ERROR_PORT_UNKNOWN;
+//  }
+  UserMessage::Ptr message = event->GetMessage<UserMessage>();
+  PortName to_port_name = message->to_port_name_;
+  Port::Ptr to_port = ports_[to_port_name];
+  bool dummy;
+  to_port->message_queue.AcceptMessage(message, &dummy);
+//  to_port->BufferEvent(from_node, event);
+  return 0;
+}
+
+int Node::GetMessage(const PortRef& port_ref, Event::Ptr& event) {
+  Port::Ptr port = port_ref.port();
+  UserMessage::Ptr* message =
+      reinterpret_cast<UserMessage::Ptr*>(event->GetMessage());
+  if (port->message_queue.HasNextMessage()) {
+    port->message_queue.GetNextMessage(message);
+  } else {
+    LOG(ERROR) << "GetMessage failed: no message now";
+  }
+  return OK;
+}
+
+}  // namespace ports
 }  // namespace mojo
 }  // namespace tit
