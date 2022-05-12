@@ -10,6 +10,7 @@
 
 #include <map>
 
+#include "base/simple_thread.h"
 #include "core/io_task_runner.h"
 
 namespace tit {
@@ -22,18 +23,23 @@ class LibuvIOTaskRunnerAdapter : public IOTaskRunner {
       : loop_(static_cast<uv_loop_t *>(malloc(sizeof(uv_loop_t)))),
         close_(0) {
     uv_loop_init(loop_);
+    thread = new base::SimpleThread(
+        [this] { Run(); },
+        "IO Task Runner");
   }
 
   ~LibuvIOTaskRunnerAdapter() {
     Close();
   }
 
-  void Run() {
-    uv_run(loop_, UV_RUN_DEFAULT);
+  void Start() {
+    thread->Start();
+    thread->Detach();
   }
 
   void Close() {
     if (close_) return;
+    delete thread;
     uv_loop_close(loop_);
     free(loop_);
     loop_ = nullptr;
@@ -49,9 +55,16 @@ class LibuvIOTaskRunnerAdapter : public IOTaskRunner {
   void DelFdEvent(int fd, IOEvent event) override;
 
  private:
+
+  void Run() {
+    uv_run(loop_, UV_RUN_DEFAULT);
+  }
+
+ private:
   uv_loop_t* loop_;
   std::map<int, uv_poll_t*> handles_map_;
   char close_;
+  base::SimpleThread* thread;
 };
 
 }  // namespace mojo

@@ -9,7 +9,9 @@
 namespace tit {
 namespace mojo {
 
-void LibuvIOTaskRunnerAdapter::OnLibuvFdActive(uv_poll_t* handle, int status, int events) {
+void LibuvIOTaskRunnerAdapter::OnLibuvFdActive(uv_poll_t* handle,
+                                               int status,
+                                               int events) {
   LibuvIOTaskRunnerAdapter* runner =
       static_cast<LibuvIOTaskRunnerAdapter*>(handle->data);
   if (status < 0) {
@@ -19,7 +21,8 @@ void LibuvIOTaskRunnerAdapter::OnLibuvFdActive(uv_poll_t* handle, int status, in
   int fd = handle->u.fd;
   if (events & UV_READABLE) {
     runner->delegate(fd)->OnFdReadable(fd);
-  } else if (events & UV_WRITABLE) {
+  }
+  if (events & UV_WRITABLE) {
     runner->delegate(fd)->OnFdWriteable(fd);
   }
 }
@@ -50,11 +53,12 @@ void LibuvIOTaskRunnerAdapter::AddFdEvent(int fd, IOEvent event) {
     handle_ = handles_map_[fd];
   }
 
-  uv_poll_event uv_ev;
+  int uv_ev = 0;
   if (event & IOEvent::kReadable) {
-    uv_ev = UV_READABLE;
-  } else if (event & IOEvent::kWritable) {
-    uv_ev = UV_WRITABLE;
+    uv_ev |= UV_READABLE;
+  }
+  if (event & IOEvent::kWritable) {
+    uv_ev |= UV_WRITABLE;
   }
   uv_poll_start(handle_, uv_ev, OnLibuvFdActive);
 }
