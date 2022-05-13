@@ -26,5 +26,5 @@ make
 ## run test
 ```c++
 cd bin
-./channel
+./core
 ```
