@@ -28,3 +28,8 @@ make
 cd bin
 ./core
 ```
+
+## Some articles about this project
+[Mojo IPC 文件描述符的传递](https://zhuanlan.zhihu.com/p/510935402)
+
+[Mojo IPC 设计与Invitation机制实现](https://zhuanlan.zhihu.com/p/510935402)
